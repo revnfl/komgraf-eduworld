@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 function main() {
   const canvas = document.querySelector('#c');
@@ -10,8 +11,8 @@ function main() {
 
   const fov = 45;
   const aspect = 2;
-  const near = 5;
-  const far = 100;
+  const near = 10;
+  const far = 1000;
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   camera.position.set(60, 40, 50);
 
@@ -112,9 +113,9 @@ function main() {
   controls2.update();
 
   // === Geometry ===
-  const planeSize = 80;
+  const planeSize = 160;
   const loader = new THREE.TextureLoader();
-  const texture = loader.load('https://threejs.org/manual/examples/resources/images/checker.png');
+  const texture = loader.load('textures/white-marble.jpg');
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.magFilter = THREE.NearestFilter;
@@ -128,12 +129,35 @@ function main() {
   planeMesh.rotation.x = Math.PI * -0.5;
   scene.add(planeMesh);
 
-  const cubeSize = 15;
-  const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-  const cubeMat = new THREE.MeshPhongMaterial({ color: '#8AC' });
-  const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
-  cubeMesh.position.set(0, cubeSize / 2, 0);
-  scene.add(cubeMesh);
+  // const cubeSize = 15;
+  // const cubeGeo = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+  // const cubeMat = new THREE.MeshPhongMaterial({ color: '#8AC' });
+  // const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
+  // cubeMesh.position.set(0, cubeSize / 2, 0);
+  // scene.add(cubeMesh);
+
+  const gltfLoader = new GLTFLoader();
+
+  gltfLoader.load(
+    'models/kaabah.glb',       // your file path
+    (gltf) => {
+      const model = gltf.scene;
+
+      // Optional transforms
+      model.scale.set(2, 2, 2);
+      model.position.set(0, 0, 0);
+      model.rotation.y = Math.PI; // if needed
+
+      scene.add(model);
+    },
+    (xhr) => {
+      console.log((xhr.loaded / xhr.total * 100) + '% loaded');
+    },
+    (err) => {
+      console.error('Error loading GLB:', err);
+    }
+  );
+
 
   // === Render functions ===
   function resizeRendererToDisplaySize(renderer) {
