@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js Dual View</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="importmap">
+  {
+    "imports": {
+      "three": "https://threejs.org/build/three.module.js",
+      "three/addons/": "https://threejs.org/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+
+<body>
+    <nav class="navbar">
+        <a href="index.html">Home</a>
+        <a href="kaabah.html">Kaabah</a>
+        <a href="louvre.html">Louvre</a>
+        <a href="pyramid.html">Pyramids</a>
+    </nav>
+
+    <canvas id="c"></canvas>
+    <div class="split">
+        <div id="view1" tabindex="1"></div>
+        <div id="view2" tabindex="2"></div>
+    </div>
+
+    <script type="module" src="kaabah.js"></script>
+</body>
+
+</html>
