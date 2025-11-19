@@ -2,11 +2,11 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Three.js Dual View</title>
-    <link rel="stylesheet" href="style.css" />
-    <script type="importmap">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Three.js Dual View</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
   {
     "imports": {
       "three": "https://threejs.org/build/three.module.js",
@@ -17,20 +17,31 @@
 </head>
 
 <body>
-    <nav class="navbar">
-        <a href="index.html">Home</a>
-        <a href="kaabah.html">Kaabah</a>
-        <a href="louvre.html">Louvre</a>
-        <a href="pyramid.html">Pyramids</a>
-    </nav>
+  <nav class="navbar">
+    <a href="index.html">Home</a>
+    <a href="kaabah.html">Kaabah</a>
+    <a href="louvre.html">Louvre</a>
+    <a href="pyramid.html">Pyramids</a>
+  </nav>
 
-    <canvas id="c"></canvas>
-    <div class="split">
-        <div id="view1" tabindex="1"></div>
-        <div id="view2" tabindex="2"></div>
-    </div>
+  <canvas id="c"></canvas>
+  <div class="split">
+    <div id="view1" tabindex="1"></div>
+    <div id="view2" tabindex="2"></div>
+  </div>
 
-    <script type="module" src="kaabah.js"></script>
+  <div id="popup" style="
+  position:absolute;
+  background:white;
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:14px;
+  display:none;
+  box-shadow:0 2px 10px rgba(0,0,0,0.3);
+"></div>
+
+
+  <script type="module" src="kaabah.js"></script>
 </body>
 
 </html>

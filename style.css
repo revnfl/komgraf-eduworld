@@ -41,6 +41,19 @@ body {
   z-index: 100 !important;
 }
 
+#c {
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.split {
+  pointer-events: auto;
+}
+
+#view1, #view2 {
+  pointer-events: auto;
+}
+
 .navbar {
   position: absolute;
   top: 0;

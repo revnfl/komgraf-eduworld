@@ -5,6 +5,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 function main() {
   const canvas = document.querySelector('#c');
+  const popup = document.getElementById('popup');
+
   const view1Elem = document.querySelector('#view1');
   const view2Elem = document.querySelector('#view2');
   const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
@@ -60,12 +62,8 @@ function main() {
       this.object = object;
       this.prop = prop;
     }
-    get value() {
-      return `#${this.object[this.prop].getHexString()}`;
-    }
-    set value(hexString) {
-      this.object[this.prop].set(hexString);
-    }
+    get value() { return `#${this.object[this.prop].getHexString()}`; }
+    set value(hexString) { this.object[this.prop].set(hexString); }
   }
 
   function makeXYZGUI(gui, vector3, name, onChangeFn) {
@@ -135,31 +133,86 @@ function main() {
   // const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
   // cubeMesh.position.set(0, cubeSize / 2, 0);
   // scene.add(cubeMesh);
-
+  
+  // === GLB Loader ===
+  const hotspots = [];
   const gltfLoader = new GLTFLoader();
 
   gltfLoader.load(
-    'models/kaabah.glb',       // your file path
+    'models/kaabah.glb',
     (gltf) => {
       const model = gltf.scene;
-
-      // Optional transforms
       model.scale.set(2, 2, 2);
-      model.position.set(0, 0, 0);
-      model.rotation.y = Math.PI; // if needed
-
       scene.add(model);
-    },
-    (xhr) => {
-      console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-    },
-    (err) => {
-      console.error('Error loading GLB:', err);
+
+      // ====== HOTSPOT EXAMPLE ======
+      const hotspotGeo = new THREE.SphereGeometry(0.6, 16, 16);
+      const hotspotMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false
+      });
+      const hotspot1 = new THREE.Mesh(hotspotGeo, hotspotMat);
+
+      hotspot1.position.set(5, 9, 0);
+      hotspot1.userData.info = "<b>Golden Gutter</b><br>The Mīzāb al-Raḥmah, commonly shortened to Mīzāb or Meezab is a rain spout made of gold.<br>Added when the Kaaba was rebuilt in 1627, after a flood in 1626 caused three of the four walls to collapse.";
+
+      model.add(hotspot1);
+      hotspots.push(hotspot1);
     }
   );
 
+  // === Raycaster ===
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
 
-  // === Render functions ===
+  let activeHotspot = null;
+
+  renderer.domElement.addEventListener("click", (event) => {
+    const rect = renderer.domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObjects(hotspots);
+
+    if (intersects.length > 0) {
+      const hotspot = intersects[0].object;
+
+      // --- TOGGLE BEHAVIOR ---
+      if (activeHotspot === hotspot) {
+        // Clicked the same hotspot → hide popup
+        popup.style.display = "none";
+        activeHotspot = null;
+        return;
+      }
+
+      // Clicked a different hotspot → show/update popup
+      activeHotspot = hotspot;
+      popup.innerHTML = hotspot.userData.info;
+      popup.style.display = "block";
+      updatePopupPosition(hotspot);
+
+    }
+  });
+
+
+  // === Popup Pos Updater ===
+  function updatePopupPosition(hotspot) {
+    const pos = new THREE.Vector3();
+    hotspot.getWorldPosition(pos);
+    pos.project(camera);
+
+    const rect = canvas.getBoundingClientRect();
+    const x = (pos.x * 0.5 + 0.5) * rect.width + rect.left;
+    const y = (-(pos.y * 0.5) + 0.5) * rect.height + rect.top;
+
+    popup.style.left = x + "px";
+    popup.style.top = y + "px";
+  }
+
+  // === Render ===
   function resizeRendererToDisplaySize(renderer) {
     const canvas = renderer.domElement;
     const width = canvas.clientWidth;
@@ -188,7 +241,7 @@ function main() {
     resizeRendererToDisplaySize(renderer);
     renderer.setScissorTest(true);
 
-    // Left view (main)
+    // left view
     {
       const aspect = setScissorForElement(view1Elem);
       camera.aspect = aspect;
@@ -199,7 +252,7 @@ function main() {
       renderer.render(scene, camera);
     }
 
-    // Right view (second camera)
+    // right view
     {
       const aspect = setScissorForElement(view2Elem);
       camera2.aspect = aspect;
@@ -209,8 +262,19 @@ function main() {
       renderer.render(scene, camera2);
     }
 
+    // update popup each frame
+    hotspots.forEach(h => updatePopupPosition(h));
+
     requestAnimationFrame(render);
   }
+
+  view1Elem.addEventListener("click", e => {
+    canvas.dispatchEvent(new MouseEvent("click", e));
+  });
+
+  view2Elem.addEventListener("click", e => {
+    canvas.dispatchEvent(new MouseEvent("click", e));
+  });
 
   requestAnimationFrame(render);
 }
