@@ -157,6 +157,7 @@ function main() {
 
       hotspotRainGutter.position.set(5, 9, 0);
       hotspotRainGutter.userData.info = `
+        <img src="https://hajjumrahplanner.com/wp-content/uploads/2024/05/meezab.jpg" class="thumb">
         <b>Mīzāb Ka'bah</b><br>
         Mīzāb al-Raḥmah, atau yang biasa disebut sebagai Mīzāb atau Meezab merupakan saluran air berlapis emas murni di sisi Hijir Ismail.
         Dibuat untuk mengalirkan air hujan dari atap Ka'bah. Desain emasnya membuatnya jadi salah satu bagian paling ikonik.
@@ -175,6 +176,7 @@ function main() {
 
       hotspotHajarAswad.position.set(-5, 1.5, 5);
       hotspotHajarAswad.userData.info = `
+        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/The_Blackstone.jpg" class="thumb">
         <b>Hajar Aswad</b><br>
         Batu hitam yang dipasang di sudut timur Ka'bah. Terdiri dari beberapa pecahan kecil yang disatukan dengan bingkai perak.
         Banyak riwayat menyebutkan warnanya dahulu lebih cerah, lalu menghitam karena "<i>dosa manusia</i>".
