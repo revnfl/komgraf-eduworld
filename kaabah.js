@@ -19,7 +19,11 @@ function main() {
   camera.position.set(60, 40, 50);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('black');
+
+  // === Space background ===
+  const skyTexture = new THREE.TextureLoader().load('textures/blue-sky.jpg');
+  skyTexture.colorSpace = THREE.SRGBColorSpace;
+  scene.background = skyTexture;
 
   // === Lights ===
   const dirLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -183,10 +187,10 @@ function main() {
     // Add slight color tint for time of day
     if (opacity > 0.7) {
       // Night time - dark blue tint
-      overlay.style.background = `rgba(20, 40, 80, ${opacity * 0.8})`;
+      overlay.style.background = `rgba(20, 40, 40, ${opacity * 0.8})`;
     } else if (opacity > 0.4) {
       // Early morning/evening - warm tint
-      overlay.style.background = `rgba(40, 40, 20, ${opacity * 0.6})`;
+      overlay.style.background = `rgba(40, 40, 20, ${opacity * 0.4})`;
     } else {
       // Day time - minimal overlay
       overlay.style.background = `rgba(0, 0, 0, ${opacity * 0.3})`;
@@ -432,7 +436,6 @@ function main() {
       camera.updateProjectionMatrix();
       cameraHelper.visible = false;
       dirLightHelper.visible = false;
-      scene.background.set(0x000000);
       renderer.render(scene, camera);
     }
 
@@ -442,7 +445,6 @@ function main() {
       camera2.aspect = aspect;
       camera2.updateProjectionMatrix();
       cameraHelper.visible = true;
-      scene.background.set(0x000040);
       renderer.render(scene, camera2);
     }
 
