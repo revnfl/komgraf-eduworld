@@ -84,6 +84,115 @@ function main() {
     cameraHelper.update();
   }
 
+  // === Time-based Lighting System ===
+  const timeState = { minutes: 0 }; // 0-1440 (0:00 - 23:59)
+
+  function getFormattedTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.floor(minutes % 60);
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  }
+
+  function updateLightingForTime(minutes) {
+    // Normalize time to 0-1 range (0 = midnight, 0.5 = noon, 1 = next midnight)
+    const timeNorm = (minutes % 1440) / 1440;
+    
+    // Sun angle: -180° at midnight, 0° at 6 AM, 90° at noon, 180° at 6 PM
+    const sunAngle = timeNorm * Math.PI * 2 - Math.PI;
+    
+    // Sun height: 0 at midnight/6am/6pm, max at noon
+    const sunHeight = Math.max(0, Math.sin(timeNorm * Math.PI) * 50);
+    
+    // Horizontal position based on time
+    const sunHorizontal = Math.cos(sunAngle) * 70;
+    
+    // Update light position (simulate sun movement)
+    dirLight.position.set(sunHorizontal, sunHeight + 20, Math.sin(sunAngle) * 70);
+    
+    // Update light target (always look at center of scene)
+    dirLight.target.position.set(0, 0, 0);
+    
+    // Update intensity based on sun height (0 at night, 1 at day)
+    const daylight = Math.max(0.1, sunHeight / 50);
+    dirLight.intensity = daylight;
+    
+    // Update light color based on time of day
+    if (timeNorm < 0.25) {
+      // Night (0:00 - 6:00): dark blue
+      dirLight.color.setHSL(0.6, 1, 0.3);
+    } else if (timeNorm < 0.35) {
+      // Early morning (6:00 - 8:24): warm orange
+      dirLight.color.setHSL(0.08, 1, 0.5);
+    } else if (timeNorm < 0.5) {
+      // Morning to noon (8:24 - 12:00): bright yellow
+      dirLight.color.setHSL(0.12, 1, 0.6);
+    } else if (timeNorm < 0.65) {
+      // Noon to afternoon (12:00 - 15:36): white/bright yellow
+      dirLight.color.setHSL(0.12, 0.8, 0.7);
+    } else if (timeNorm < 0.75) {
+      // Late afternoon (15:36 - 18:00): warm orange
+      dirLight.color.setHSL(0.08, 1, 0.5);
+    } else if (timeNorm < 0.85) {
+      // Sunset (18:00 - 20:24): deep orange/red
+      dirLight.color.setHSL(0.05, 1, 0.4);
+    } else {
+      // Night (20:24 - 24:00): dark blue
+      dirLight.color.setHSL(0.6, 1, 0.3);
+    }
+    
+    // Update ambient light based on time
+    ambLight.intensity = Math.max(0.1, daylight * 0.3);
+    
+    // === Update background brightness based on time ===
+    // Calculate background brightness: 0 = very dark (night), 1 = full brightness (noon)
+    let bgBrightness = daylight;
+    
+    // Apply brightness overlay to canvas
+    updateBackgroundBrightness(bgBrightness);
+    
+    updateLight();
+  }
+
+  // === Background brightness control ===
+  let backgroundOverlay = null;
+
+  function createBackgroundOverlay() {
+    if (!backgroundOverlay) {
+      backgroundOverlay = document.createElement('div');
+      backgroundOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0);
+        pointer-events: none;
+        z-index: 500;
+      `;
+      document.body.appendChild(backgroundOverlay);
+    }
+    return backgroundOverlay;
+  }
+
+  function updateBackgroundBrightness(brightness) {
+    // brightness: 0 = full darkness (night), 1 = full brightness (day)
+    // We want overlay opacity to be high (dark) at night and low (transparent) at day
+    const overlay = createBackgroundOverlay();
+    const opacity = 1 - brightness; // Invert so high brightness = low opacity
+    
+    // Add slight color tint for time of day
+    if (opacity > 0.7) {
+      // Night time - dark blue tint
+      overlay.style.background = `rgba(20, 40, 80, ${opacity * 0.8})`;
+    } else if (opacity > 0.4) {
+      // Early morning/evening - warm tint
+      overlay.style.background = `rgba(40, 40, 20, ${opacity * 0.6})`;
+    } else {
+      // Day time - minimal overlay
+      overlay.style.background = `rgba(0, 0, 0, ${opacity * 0.3})`;
+    }
+  }
+
   // === GUI ===
   const gui = new GUI();
   gui.add(camera, 'fov', 1, 180).onChange(updateCamera);
@@ -92,10 +201,45 @@ function main() {
   gui.add(minMaxGUIHelper, 'min', 0.01, 100, 0.1).name('near').onChange(updateCamera);
   gui.add(minMaxGUIHelper, 'max', 0.1, 250, 0.1).name('far').onChange(updateCamera);
 
-  gui.addColor(new ColorGUIHelper(dirLight, 'color'), 'value').name('Light Color');
-  gui.add(dirLight, 'intensity', 0, 5, 0.01);
-  makeXYZGUI(gui, dirLight.position, 'Light Position', updateLight);
-  makeXYZGUI(gui, dirLight.target.position, 'Light Target', updateLight);
+  // === Time-based Lighting GUI ===
+  const lightFolder = gui.addFolder('Lighting (Time-based)');
+  
+  // Add time display label
+  const timeDisplay = document.createElement('div');
+  timeDisplay.style.cssText = `
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: bold;
+    pointer-events: none;
+    z-index: 999;
+  `;
+  document.body.appendChild(timeDisplay);
+
+  // Update time display
+  function updateTimeDisplay() {
+    timeDisplay.textContent = `Time: ${getFormattedTime(timeState.minutes)}`;
+  }
+
+  // Initialize lighting and display
+  updateLightingForTime(timeState.minutes);
+  updateTimeDisplay();
+
+  // Time slider
+  lightFolder.add(timeState, 'minutes', 0, 1439, 1)
+    .name('Time of Day')
+    .onChange((value) => {
+      updateLightingForTime(value);
+      updateTimeDisplay();
+    });
+
+  lightFolder.open();
 
   // === Controls ===
   const controls = new OrbitControls(camera, view1Elem);
