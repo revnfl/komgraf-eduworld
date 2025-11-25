@@ -145,6 +145,9 @@ function main() {
       model.scale.set(2, 2, 2);
       scene.add(model);
 
+      const greenPlane = model.getObjectByName("Plane002_Material004_0");
+      if (greenPlane) greenPlane.visible = false;
+
       // ====== HOTSPOT RAIN GUTTER ======
       const hotspotRainGeo = new THREE.SphereGeometry(0.6, 16, 16);
       const hotspotRainMat = new THREE.MeshBasicMaterial({
