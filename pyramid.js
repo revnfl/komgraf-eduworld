@@ -109,6 +109,115 @@ function main() {
     cameraHelper.update();
   }
 
+  // === Time-based Lighting System ===
+  const timeState = { minutes: 0 }; // 0-1440 (0:00 - 23:59)
+
+  function getFormattedTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.floor(minutes % 60);
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  }
+
+  function updateLightingForTime(minutes) {
+    // Normalize time to 0-1 range (0 = midnight, 0.5 = noon, 1 = next midnight)
+    const timeNorm = (minutes % 1440) / 1440;
+    
+    // Sun angle: -180° at midnight, 0° at 6 AM, 90° at noon, 180° at 6 PM
+    const sunAngle = timeNorm * Math.PI * 2 - Math.PI;
+    
+    // Sun height: 0 at midnight/6am/6pm, max at noon
+    const sunHeight = Math.max(0, Math.sin(timeNorm * Math.PI) * 50);
+    
+    // Horizontal position based on time
+    const sunHorizontal = Math.cos(sunAngle) * 70;
+    
+    // Update light position (simulate sun movement)
+    dirLight.position.set(sunHorizontal, sunHeight + 20, Math.sin(sunAngle) * 70);
+    
+    // Update light target (always look at center of scene)
+    dirLight.target.position.set(0, 0, 0);
+    
+    // Update intensity based on sun height (0 at night, 1 at day)
+    const daylight = Math.max(0.1, sunHeight / 50);
+    dirLight.intensity = daylight;
+    
+    // Update light color based on time of day
+    if (timeNorm < 0.25) {
+      // Night (0:00 - 6:00): dark blue
+      dirLight.color.setHSL(0.6, 1, 0.3);
+    } else if (timeNorm < 0.35) {
+      // Early morning (6:00 - 8:24): warm orange
+      dirLight.color.setHSL(0.08, 1, 0.5);
+    } else if (timeNorm < 0.5) {
+      // Morning to noon (8:24 - 12:00): bright yellow
+      dirLight.color.setHSL(0.12, 1, 0.6);
+    } else if (timeNorm < 0.65) {
+      // Noon to afternoon (12:00 - 15:36): white/bright yellow
+      dirLight.color.setHSL(0.12, 0.8, 0.7);
+    } else if (timeNorm < 0.75) {
+      // Late afternoon (15:36 - 18:00): warm orange
+      dirLight.color.setHSL(0.08, 1, 0.5);
+    } else if (timeNorm < 0.85) {
+      // Sunset (18:00 - 20:24): deep orange/red
+      dirLight.color.setHSL(0.05, 1, 0.4);
+    } else {
+      // Night (20:24 - 24:00): dark blue
+      dirLight.color.setHSL(0.6, 1, 0.3);
+    }
+    
+    // Update ambient light based on time
+    ambLight.intensity = Math.max(0.1, daylight * 0.3);
+    
+    // === Update background brightness based on time ===
+    // Calculate background brightness: 0 = very dark (night), 1 = full brightness (noon)
+    let bgBrightness = daylight;
+    
+    // Apply brightness overlay to canvas
+    updateBackgroundBrightness(bgBrightness);
+    
+    updateLight();
+  }
+
+  // === Background brightness control ===
+  let backgroundOverlay = null;
+
+  function createBackgroundOverlay() {
+    if (!backgroundOverlay) {
+      backgroundOverlay = document.createElement('div');
+      backgroundOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0);
+        pointer-events: none;
+        z-index: 500;
+      `;
+      document.body.appendChild(backgroundOverlay);
+    }
+    return backgroundOverlay;
+  }
+
+  function updateBackgroundBrightness(brightness) {
+    // brightness: 0 = full darkness (night), 1 = full brightness (day)
+    // We want overlay opacity to be high (dark) at night and low (transparent) at day
+    const overlay = createBackgroundOverlay();
+    const opacity = 1 - brightness; // Invert so high brightness = low opacity
+    
+    // Add slight color tint for time of day
+    if (opacity > 0.7) {
+      // Night time - dark blue tint
+      overlay.style.background = `rgba(20, 40, 40, ${opacity * 0.8})`;
+    } else if (opacity > 0.4) {
+      // Early morning/evening - warm tint
+      overlay.style.background = `rgba(40, 40, 20, ${opacity * 0.4})`;
+    } else {
+      // Day time - minimal overlay
+      overlay.style.background = `rgba(0, 0, 0, ${opacity * 0.3})`;
+    }
+  }
+
   // === GUI ===
   const gui = new GUI();
   gui.add(camera, 'fov', 1, 180).onChange(updateCamera);
@@ -116,10 +225,45 @@ function main() {
   gui.add(minMaxGUIHelper, 'min', 0.01, 100, 0.1).name('near').onChange(updateCamera);
   gui.add(minMaxGUIHelper, 'max', 0.1, 250, 0.1).name('far').onChange(updateCamera);
 
-  gui.addColor(new ColorGUIHelper(dirLight, 'color'), 'value').name('Light Color');
-  gui.add(dirLight, 'intensity', 0, 5, 0.01);
-  makeXYZGUI(gui, dirLight.position, 'Light Position', updateLight);
-  makeXYZGUI(gui, dirLight.target.position, 'Light Target', updateLight);
+  // === Time-based Lighting GUI ===
+  const lightFolder = gui.addFolder('Lighting (Time-based)');
+  
+  // Add time display label
+  const timeDisplay = document.createElement('div');
+  timeDisplay.style.cssText = `
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: bold;
+    pointer-events: none;
+    z-index: 999;
+  `;
+  document.body.appendChild(timeDisplay);
+
+  // Update time display
+  function updateTimeDisplay() {
+    timeDisplay.textContent = `Time: ${getFormattedTime(timeState.minutes)}`;
+  }
+
+  // Initialize lighting and display
+  updateLightingForTime(timeState.minutes);
+  updateTimeDisplay();
+
+  // Time slider
+  lightFolder.add(timeState, 'minutes', 0, 1439, 1)
+    .name('Time of Day')
+    .onChange((value) => {
+      updateLightingForTime(value);
+      updateTimeDisplay();
+    });
+
+  lightFolder.open();
 
   // === Controls ===
   const controls = new OrbitControls(camera, view1Elem);
@@ -219,31 +363,29 @@ function main() {
       sphinx.scale.set(0.5, 0.5, 0.5);
       sphinx.position.set(0, 1.8, 30);
       sphinx.rotation.set(0, 300, 0);
+
       sphinx.traverse((node) => {
         if (node.isMesh) {
           node.castShadow = true;
           node.receiveShadow = true;
-
-          // Apply pyramid texture to Sphinx
           node.material = new THREE.MeshPhongMaterial({ map: clayTexture });
         }
       });
+
       scene.add(sphinx);
 
-      // // Optional GUI controls
-      // const sphinxFolder = gui.addFolder('Sphinx');
-      // makeXYZGUI(sphinxFolder, sphinx.position, 'Position', () => {});
-      // makeXYZGUI(sphinxFolder, sphinx.scale, 'Scale', () => {});
-      // makeXYZGUI(sphinxFolder, sphinx.rotation, 'Rotation', () => {});
-      // sphinxFolder.open();
-    },
-    (xhr) => {
-      console.log(`Sphinx model ${(xhr.loaded / xhr.total * 100).toFixed(2)}% loaded`);
-    },
-    (error) => {
-      console.error('An error occurred while loading the Sphinx model:', error);
+      // Tambahkan hotspot otomatis
+      createHotspotOnObject(
+        sphinx,
+        0.4,
+        `<b>Sphinx</b><br>
+        Model GLB<br>
+        Tekstur: clay.png<br>
+        Posisi di depan piramida.`
+      );
     }
   );
+
 
   // === Position group ===
   pyramidGroup.position.set(0, 0, 0);
@@ -273,6 +415,149 @@ function main() {
     return width / height;
   }
 
+  // === Hotspot Raycasting Setup ===
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  const hotspots = [];
+  let activeHotspot = null;
+
+  // Ambil elemen popup dari HTML
+  const popup = document.getElementById("popup");
+
+  function updatePopupPosition(hotspot) {
+    const pos = new THREE.Vector3();
+    hotspot.getWorldPosition(pos);
+
+    // Convert 3D → Normalized Device Coordinates
+    pos.project(camera);
+
+    const rect = renderer.domElement.getBoundingClientRect();
+    const x = (pos.x * 0.5 + 0.5) * rect.width + rect.left;
+    const y = (-(pos.y * 0.5) + 0.5) * rect.height + rect.top;
+
+    popup.style.left = `${x}px`;
+    popup.style.top = `${y}px`;
+  }
+
+  function createHotspot(position, html) {
+    const geo = new THREE.SphereGeometry(0.5, 16, 16);
+    const mat = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 0.25, transparent: true });
+    const mesh = new THREE.Mesh(geo, mat);
+
+    mesh.position.copy(position);
+    mesh.userData.info = html;
+
+    scene.add(mesh);
+    hotspots.push(mesh);
+
+    return mesh;
+  }
+
+
+  function createHotspotOnObject(object3D, offsetY, html) {
+    const box = new THREE.Box3().setFromObject(object3D);
+    const center = new THREE.Vector3();
+    box.getCenter(center);
+
+    // Tempatkan hotspot di atas model
+    const hotspotPos = new THREE.Vector3(
+      center.x,
+      box.max.y + offsetY,
+      center.z
+    );
+
+    return createHotspot(hotspotPos, html);
+  }
+
+
+  // === Create Hotspots ===
+
+  // Hotspot Pyramid 1
+  createHotspotOnObject(
+    pyramid1Mesh,
+    1, // offset di atas puncak
+    `<b>Pyramid Besar</b><br>
+    Tinggi: 15m<br>
+    Menggunakan ConeGeometry.<br>
+    Tekstur: brick.jpg`
+  );
+
+  // Hotspot Pyramid 2
+  createHotspotOnObject(
+    pyramid2Mesh,
+    1,
+    `<b>Pyramid Kedua</b><br>
+    Tinggi: 9m<br>
+    Lokasi timur laut piramida utama.`
+  );
+
+  // Hotspot Pyramid 3
+  createHotspotOnObject(
+    pyramid3Mesh,
+    1,
+    `<b>Pyramid Ketiga</b><br>
+    Ukuran paling kecil<br>
+    Radius: 6m`
+  );
+
+
+  function onClick(event) {
+    // Determine which view was clicked and use appropriate camera
+    let clickedCamera = camera;
+    const rect = renderer.domElement.getBoundingClientRect();
+    const eventRect = event.target?.getBoundingClientRect?.() || rect;
+    
+    // Check if click came from view2 (right pane)
+    const view2Rect = view2Elem.getBoundingClientRect();
+    const clickX = event.clientX;
+    if (clickX > view2Rect.left) {
+      clickedCamera = camera2;
+      console.log('Using camera2 for raycasting');
+    } else {
+      console.log('Using camera1 for raycasting');
+    }
+
+    mouse.x = ((clickX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    console.log('Click at mouse coords:', mouse.x, mouse.y);
+    raycaster.setFromCamera(mouse, clickedCamera);
+    const intersects = raycaster.intersectObjects(hotspots, true);
+
+    console.log('Intersects found:', intersects.length, 'out of', hotspots.length, 'hotspots');
+
+    if (intersects.length > 0) {
+      const hotspot = intersects[0].object;
+
+      // Toggle jika klik hotspot yang sama
+      if (activeHotspot === hotspot) {
+        popup.style.display = "none";
+        activeHotspot = null;
+        return;
+      }
+
+      // Tampilkan popup
+      activeHotspot = hotspot;
+      popup.innerHTML = hotspot.userData.info;
+      popup.style.display = "block";
+      updatePopupPosition(hotspot);
+    }
+  }
+
+  renderer.domElement.addEventListener("click", onClick);
+
+  // Handle clicks from view1 and view2 split panes
+  view1Elem.addEventListener("click", (e) => {
+    if (e.target === view1Elem) {
+      onClick(e);
+    }
+  });
+  view2Elem.addEventListener("click", (e) => {
+    if (e.target === view2Elem) {
+      onClick(e);
+    }
+  });
+
   function render() {
     resizeRendererToDisplaySize(renderer);
     renderer.setScissorTest(true);
@@ -297,6 +582,10 @@ function main() {
     }
 
     requestAnimationFrame(render);
+
+    if (activeHotspot) {
+      updatePopupPosition(activeHotspot);
+    }
   }
 
   requestAnimationFrame(render);
