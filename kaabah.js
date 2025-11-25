@@ -133,7 +133,7 @@ function main() {
   // const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
   // cubeMesh.position.set(0, cubeSize / 2, 0);
   // scene.add(cubeMesh);
-  
+
   // === GLB Loader ===
   const hotspots = [];
   const gltfLoader = new GLTFLoader();
@@ -145,21 +145,48 @@ function main() {
       model.scale.set(2, 2, 2);
       scene.add(model);
 
-      // ====== HOTSPOT EXAMPLE ======
-      const hotspotGeo = new THREE.SphereGeometry(0.6, 16, 16);
-      const hotspotMat = new THREE.MeshBasicMaterial({
+      // ====== HOTSPOT RAIN GUTTER ======
+      const hotspotRainGeo = new THREE.SphereGeometry(0.6, 16, 16);
+      const hotspotRainMat = new THREE.MeshBasicMaterial({
         color: 0xffffff,
         transparent: true,
         opacity: 0.25,
         depthWrite: false
       });
-      const hotspot1 = new THREE.Mesh(hotspotGeo, hotspotMat);
+      const hotspotRainGutter = new THREE.Mesh(hotspotRainGeo, hotspotRainMat);
 
-      hotspot1.position.set(5, 9, 0);
-      hotspot1.userData.info = "<b>Golden Gutter</b><br>The Mīzāb al-Raḥmah, commonly shortened to Mīzāb or Meezab is a rain spout made of gold.<br>Added when the Kaaba was rebuilt in 1627, after a flood in 1626 caused three of the four walls to collapse.";
+      hotspotRainGutter.position.set(5, 9, 0);
+      hotspotRainGutter.userData.info = `
+        <b>Mīzāb Ka'bah</b><br>
+        Mīzāb al-Raḥmah, atau yang biasa disebut sebagai Mīzāb atau Meezab merupakan saluran air berlapis emas murni di sisi Hijir Ismail.
+        Dibuat untuk mengalirkan air hujan dari atap Ka'bah. Desain emasnya membuatnya jadi salah satu bagian paling ikonik.
+        Ditambahkan ketika Ka'bah dibangun kembali pada tahun 1627, setelah banjir pada tahun 1626 yang menyebabkan tiga dari empat dinding runtuh.
+      `;
 
-      model.add(hotspot1);
-      hotspots.push(hotspot1);
+      // ====== HOTSPOT HAJAR ASWAD ======
+      const hotspotHajarGeo = new THREE.SphereGeometry(0.6, 16, 16);
+      const hotspotHajarMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false
+      });
+      const hotspotHajarAswad = new THREE.Mesh(hotspotHajarGeo, hotspotHajarMat);
+
+      hotspotHajarAswad.position.set(-5, 1.5, 5);
+      hotspotHajarAswad.userData.info = `
+        <b>Hajar Aswad</b><br>
+        Batu hitam yang dipasang di sudut timur Ka'bah. Terdiri dari beberapa pecahan kecil yang disatukan dengan bingkai perak.
+        Banyak riwayat menyebutkan warnanya dahulu lebih cerah, lalu menghitam karena "<i>dosa manusia</i>".
+      `;
+
+
+      // ====== HOTSPOT REGISTER ======
+      model.add(hotspotRainGutter);
+      hotspots.push(hotspotRainGutter);
+
+      model.add(hotspotHajarAswad);
+      hotspots.push(hotspotHajarAswad);
     }
   );
 
@@ -192,6 +219,17 @@ function main() {
       activeHotspot = hotspot;
       popup.innerHTML = hotspot.userData.info;
       popup.style.display = "block";
+      popup.style.maxWidth = "260px";
+      popup.style.background = "rgba(0,0,0,0.85)";
+      popup.style.color = "white";
+      popup.style.padding = "12px 16px";
+      popup.style.borderRadius = "10px";
+      popup.style.textAlign = "justify";
+      popup.style.fontSize = "14px";
+      popup.style.lineHeight = "1.4";
+      popup.style.backdropFilter = "blur(4px)";
+      popup.style.border = "1px solid rgba(255,255,255,0.2)";
+
       updatePopupPosition(hotspot);
 
     }
@@ -263,7 +301,9 @@ function main() {
     }
 
     // update popup each frame
-    hotspots.forEach(h => updatePopupPosition(h));
+    if (activeHotspot) {
+      updatePopupPosition(activeHotspot);
+    }
 
     requestAnimationFrame(render);
   }
