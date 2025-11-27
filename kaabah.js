@@ -233,7 +233,7 @@ function main() {
     padding: 10px 15px;
     border-radius: 5px;
     font-family: monospace;
-    font-size: 18px; 
+    font-size: 18px;
     font-weight: bold;
     pointer-events: none;
     z-index: 999;

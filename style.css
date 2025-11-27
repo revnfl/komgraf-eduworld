@@ -5,6 +5,7 @@
 }
 
 html, body {
+  margin: 0;
   height: 100%;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -19,25 +20,21 @@ html, body {
 
 #c {
   width: 100%;
-  height: calc(100vh - 60px);
+  height: 100%;
   display: block;
-  position: fixed;
-  top: 60px;
-  left: 0;
-  pointer-events: none;
-  z-index: 1;
+  pointer-events: auto;
+  z-index: 2;
 }
 
 .split {
-  position: fixed;
+  position: absolute;
   left: 0;
-  top: 60px;
+  top: 0;
   width: 100%;
-  height: calc(100vh - 60px);
+  height: 100%;
   display: flex;
   overflow: hidden;
   pointer-events: auto;
-  z-index: 2;
 }
 
 .split>div {
@@ -66,22 +63,11 @@ html, body {
 }
 
 .navbar {
-  position:absolute;
-  background:white;
-  padding:8px 12px;
-  border-radius:8px;
-  font-size:14px;
-  display:none;
-  box-shadow:0 2px 10px rgba(0,0,0,0.3);
-}
-
-/* Navbar Styles */
-.navbar {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 1000;
+  z-index: 9999;
   background: rgba(34, 34, 34, 0.98);
   backdrop-filter: blur(10px);
   padding: 15px 30px;
@@ -460,5 +446,5 @@ html, body {
 
 /* Lil-GUI Controls - Position below navbar */
 .lil-gui {
-   margin-top: 60px !important;
+  margin-top: 60px !important;
 }
