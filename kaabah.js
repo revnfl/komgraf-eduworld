@@ -27,8 +27,19 @@ function main() {
 
   // === Lights ===
   const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-  dirLight.position.set(0, 10, 0);
+  dirLight.position.set(70, 45, 0);
   dirLight.target.position.set(-5, 0, 0);
+  dirLight.castShadow = true;
+  dirLight.shadow.bias = -0.001;
+  dirLight.shadow.mapSize.width = 2048;
+  dirLight.shadow.mapSize.height = 2048;
+  dirLight.shadow.camera.left = -100;
+  dirLight.shadow.camera.right = 100;
+  dirLight.shadow.camera.top = 100;
+  dirLight.shadow.camera.bottom = -100;
+  dirLight.shadow.camera.near = 0.1;
+  dirLight.shadow.camera.far = 200;
+
   scene.add(dirLight);
   scene.add(dirLight.target);
 
@@ -100,26 +111,26 @@ function main() {
   function updateLightingForTime(minutes) {
     // Normalize time to 0-1 range (0 = midnight, 0.5 = noon, 1 = next midnight)
     const timeNorm = (minutes % 1440) / 1440;
-    
+
     // Sun angle: -180° at midnight, 0° at 6 AM, 90° at noon, 180° at 6 PM
     const sunAngle = timeNorm * Math.PI * 2 - Math.PI;
-    
+
     // Sun height: 0 at midnight/6am/6pm, max at noon
     const sunHeight = Math.max(0, Math.sin(timeNorm * Math.PI) * 50);
-    
+
     // Horizontal position based on time
     const sunHorizontal = Math.cos(sunAngle) * 70;
-    
+
     // Update light position (simulate sun movement)
     dirLight.position.set(sunHorizontal, sunHeight + 20, Math.sin(sunAngle) * 70);
-    
+
     // Update light target (always look at center of scene)
     dirLight.target.position.set(0, 0, 0);
-    
+
     // Update intensity based on sun height (0 at night, 1 at day)
     const daylight = Math.max(0.1, sunHeight / 50);
     dirLight.intensity = daylight;
-    
+
     // Update light color based on time of day
     if (timeNorm < 0.25) {
       // Night (0:00 - 6:00): dark blue
@@ -143,17 +154,17 @@ function main() {
       // Night (20:24 - 24:00): dark blue
       dirLight.color.setHSL(0.6, 1, 0.3);
     }
-    
+
     // Update ambient light based on time
     ambLight.intensity = Math.max(0.1, daylight * 0.3);
-    
+
     // === Update background brightness based on time ===
     // Calculate background brightness: 0 = very dark (night), 1 = full brightness (noon)
     let bgBrightness = daylight;
-    
+
     // Apply brightness overlay to canvas
     updateBackgroundBrightness(bgBrightness);
-    
+
     updateLight();
   }
 
@@ -183,7 +194,7 @@ function main() {
     // We want overlay opacity to be high (dark) at night and low (transparent) at day
     const overlay = createBackgroundOverlay();
     const opacity = 1 - brightness; // Invert so high brightness = low opacity
-    
+
     // Add slight color tint for time of day
     if (opacity > 0.7) {
       // Night time - dark blue tint
@@ -203,11 +214,11 @@ function main() {
   gui.add(camera, 'zoom', 0.1, 5, 0.01).onChange(updateCamera).listen();
   const minMaxGUIHelper = new MinMaxGUIHelper(camera, 'near', 'far', 0.01);
   gui.add(minMaxGUIHelper, 'min', 0.01, 100, 0.1).name('near').onChange(updateCamera);
-  gui.add(minMaxGUIHelper, 'max', 0.1, 250, 0.1).name('far').onChange(updateCamera);
+  gui.add(minMaxGUIHelper, 'max', 0.1, 10000, 0.1).name('far').onChange(updateCamera);
 
   // === Time-based Lighting GUI ===
   const lightFolder = gui.addFolder('Lighting (Time-based)');
-  
+
   // Add time display label
   const timeDisplay = document.createElement('div');
   timeDisplay.style.cssText = `
@@ -259,7 +270,7 @@ function main() {
   controls2.update();
 
   // === Geometry ===
-  const planeSize = 160;
+  const planeSize = 1000;
   const loader = new THREE.TextureLoader();
   const texture = loader.load('textures/white-marble.jpg');
   texture.wrapS = THREE.RepeatWrapping;
@@ -273,6 +284,7 @@ function main() {
   const planeMat = new THREE.MeshPhongMaterial({ map: texture, side: THREE.DoubleSide });
   const planeMesh = new THREE.Mesh(planeGeo, planeMat);
   planeMesh.rotation.x = Math.PI * -0.5;
+  planeMesh.receiveShadow = true;
   scene.add(planeMesh);
 
   // const cubeSize = 15;
@@ -295,6 +307,13 @@ function main() {
 
       const greenPlane = model.getObjectByName("Plane002_Material004_0");
       if (greenPlane) greenPlane.visible = false;
+
+      gltf.scene.traverse((obj) => {
+        if (obj.isMesh) {
+          obj.castShadow = true;
+          obj.receiveShadow = true;
+        }
+      });
 
       // ====== HOTSPOT RAIN GUTTER ======
       const hotspotRainGeo = new THREE.SphereGeometry(0.6, 16, 16);
@@ -431,6 +450,9 @@ function main() {
   function render() {
     resizeRendererToDisplaySize(renderer);
     renderer.setScissorTest(true);
+
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // left view
     {
