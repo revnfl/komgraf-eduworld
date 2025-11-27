@@ -100,7 +100,7 @@ function main() {
   }
 
   // === Time-based Lighting System ===
-  const timeState = { minutes: 0 }; // 0-1440 (0:00 - 23:59)
+  const timeState = { minutes: 710 }; // 0-1440 (0:00 - 23:59)
 
   function getFormattedTime(minutes) {
     const hours = Math.floor(minutes / 60);
@@ -210,20 +210,23 @@ function main() {
 
   // === GUI ===
   const gui = new GUI();
-  gui.add(camera, 'fov', 1, 180).onChange(updateCamera);
-  gui.add(camera, 'zoom', 0.1, 5, 0.01).onChange(updateCamera).listen();
+  gui.add(camera, 'fov', 1, 180).onChange(updateCamera).name('Field of View');
   const minMaxGUIHelper = new MinMaxGUIHelper(camera, 'near', 'far', 0.01);
-  gui.add(minMaxGUIHelper, 'min', 0.01, 100, 0.1).name('near').onChange(updateCamera);
-  gui.add(minMaxGUIHelper, 'max', 0.1, 10000, 0.1).name('far').onChange(updateCamera);
-
-  // === Time-based Lighting GUI ===
-  const lightFolder = gui.addFolder('Lighting (Time-based)');
-
+  gui.add(minMaxGUIHelper, 'min', 0.01, 100, 0.1).name('Near Value').onChange(updateCamera);
+  gui.add(minMaxGUIHelper, 'max', 0.1, 10000, 0.1).name('Far Value').onChange(updateCamera);
+  // Time slider
+  gui.add(timeState, 'minutes', 0, 1439, 1)
+    .name('Time of Day')
+    .onChange((value) => {
+      updateLightingForTime(value);
+      updateTimeDisplay();
+    });
+  
   // Add time display label
   const timeDisplay = document.createElement('div');
   timeDisplay.style.cssText = `
     position: absolute;
-    top: 10px;
+    top: 70px;
     left: 10px;
     background: rgba(0,0,0,0.7);
     color: #fff;
@@ -235,9 +238,7 @@ function main() {
     pointer-events: none;
     z-index: 999;
   `;
-  document.body.appendChild(timeDisplay);
-
-  // Update time display
+  document.body.appendChild(timeDisplay);  // Update time display
   function updateTimeDisplay() {
     timeDisplay.textContent = `Time: ${getFormattedTime(timeState.minutes)}`;
   }
@@ -245,16 +246,6 @@ function main() {
   // Initialize lighting and display
   updateLightingForTime(timeState.minutes);
   updateTimeDisplay();
-
-  // Time slider
-  lightFolder.add(timeState, 'minutes', 0, 1439, 1)
-    .name('Time of Day')
-    .onChange((value) => {
-      updateLightingForTime(value);
-      updateTimeDisplay();
-    });
-
-  lightFolder.open();
 
   // === Controls ===
   const controls = new OrbitControls(camera, view1Elem);

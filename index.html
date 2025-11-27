@@ -4,33 +4,380 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Three.js Dual View</title>
+  <title>KOMGRAF EduWorld - 3D Interactive Landmarks</title>
   <link rel="stylesheet" href="style.css" />
-  <script type="importmap">
-  {
-    "imports": {
-      "three": "https://threejs.org/build/three.module.js",
-      "three/addons/": "https://threejs.org/examples/jsm/"
-    }
-  }
-  </script>
 </head>
 
 <body>
   <nav class="navbar">
-    <a href="index.html">Home</a>
-    <a href="kaabah.html">Kaabah</a>
-    <a href="louvre.html">Louvre</a>
-    <a href="pyramid.html">Pyramids</a>
+    <a href="index.html" class="navbar-brand">🏠 KOMGRAF EduWorld</a>
+    <div class="navbar-links">
+      <a href="kaabah.html">Kaabah</a>
+      <a href="louvre.html">Louvre</a>
+      <a href="pyramid.html">Pyramids</a>
+    </div>
   </nav>
 
-  <canvas id="c"></canvas>
-  <div class="split">
-    <div id="view1" tabindex="1"></div>
-    <div id="view2" tabindex="2"></div>
+  <div class="home-container">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Welcome to KOMGRAF EduWorld</h1>
+        <p class="hero-subtitle">Explore the World's Most Iconic Landmarks in 3D Interactive Experience</p>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section">
+      <div class="about-content">
+        <h2>About This Project</h2>
+        <p>
+          KOMGRAF EduWorld is an immersive educational platform that brings iconic landmarks to life through 
+          interactive 3D visualization. Explore famous monuments from different eras and cultures with 
+          real-time lighting simulation and dual-view perspectives.
+        </p>
+      </div>
+    </section>
+
+    <!-- Menu Cards Section -->
+    <section class="menu-section">
+      <h2>Explore Landmarks</h2>
+      <div class="cards-container">
+        <!-- Kaabah Card -->
+        <div class="card">
+          <div class="card-header kaabah-card">
+            <h3>Kaabah</h3>
+          </div>
+          <div class="card-body">
+            <p>
+              The Kaaba is a building at the center of Islam's most important mosque, Al-Masjid al-Haram, 
+              in Mecca, Saudi Arabia. It is the most sacred site in Islam.
+            </p>
+            <div class="card-features">
+              <span class="feature">🌍 Sacred Site</span>
+              <span class="feature">📍 Mecca, Saudi Arabia</span>
+              <span class="feature">⏰ Year-round</span>
+            </div>
+            <a href="kaabah.html" class="btn btn-primary">View in 3D</a>
+          </div>
+        </div>
+
+        <!-- Pyramid Card -->
+        <div class="card">
+          <div class="card-header pyramid-card">
+            <h3>Great Pyramids</h3>
+          </div>
+          <div class="card-body">
+            <p>
+              The Great Pyramids of Giza are monumental tombs built during Egypt's Old Kingdom. 
+              They stand as testaments to ancient Egyptian engineering and architecture.
+            </p>
+            <div class="card-features">
+              <span class="feature">🏺 Ancient Wonder</span>
+              <span class="feature">📍 Giza, Egypt</span>
+              <span class="feature">📅 2589-2504 BC</span>
+            </div>
+            <a href="pyramid.html" class="btn btn-primary">View in 3D</a>
+          </div>
+        </div>
+
+        <!-- Louvre Card -->
+        <div class="card">
+          <div class="card-header louvre-card">
+            <h3>The Louvre Museum</h3>
+          </div>
+          <div class="card-body">
+            <p>
+              The Louvre is the world's most-visited museum, housing the Mona Lisa and countless 
+              masterpieces of art and history spanning thousands of years.
+            </p>
+            <div class="card-features">
+              <span class="feature">🎨 Art Museum</span>
+              <span class="feature">📍 Paris, France</span>
+              <span class="feature">🌟 Most Visited</span>
+            </div>
+            <a href="louvre.html" class="btn btn-primary">View in 3D</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+      <h2>Interactive Features</h2>
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-icon">🕐</div>
+          <h3>Time-based Lighting</h3>
+          <p>Experience landmarks at different times of day with realistic sun position and lighting</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🎥</div>
+          <h3>Dual View Perspective</h3>
+          <p>View scenes from multiple camera angles simultaneously for better spatial understanding</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🌍</div>
+          <h3>3D Models</h3>
+          <p>Detailed 3D reconstructions of landmarks with authentic textures and materials</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">⚙️</div>
+          <h3>Interactive Controls</h3>
+          <p>Orbit cameras, adjust lighting parameters, and explore landmarks in detail</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>&copy; 2025 KOMGRAF EduWorld. All rights reserved.</p>
+      <p>An educational 3D visualization project using Three.js</p>
+    </footer>
   </div>
 
-  <script type="module" src="louvre.js"></script>
+  <style>
+    .home-container {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 80px 20px;
+      text-align: center;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-content h1 {
+      font-size: 3.5em;
+      margin: 0 0 20px 0;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .hero-subtitle {
+      font-size: 1.3em;
+      margin: 0;
+      opacity: 0.95;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .about-section {
+      background: white;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .about-content {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .about-section h2 {
+      font-size: 2.5em;
+      margin: 0 0 20px 0;
+      color: #667eea;
+    }
+
+    .about-section p {
+      font-size: 1.1em;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .menu-section {
+      padding: 60px 20px;
+      background: #f8f9fa;
+    }
+
+    .menu-section h2 {
+      text-align: center;
+      font-size: 2.5em;
+      margin: 0 0 50px 0;
+      color: white;
+    }
+
+    .cards-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-header {
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.8em;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .kaabah-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .pyramid-card {
+      background: linear-gradient(135deg, #d4a574 0%, #a0826d 100%);
+    }
+
+    .louvre-card {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .card-header h3 {
+      margin: 0;
+      text-align: center;
+    }
+
+    .card-body {
+      padding: 25px;
+    }
+
+    .card-body p {
+      margin: 0 0 20px 0;
+      line-height: 1.6;
+      color: #555;
+      font-size: 0.95em;
+    }
+
+    .card-features {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .feature {
+      font-size: 0.85em;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 30px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      text-align: center;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .features-section {
+      padding: 60px 20px;
+      background: white;
+    }
+
+    .features-section h2 {
+      text-align: center;
+      font-size: 2.5em;
+      margin: 0 0 50px 0;
+      color: #667eea;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .feature-item {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .feature-icon {
+      font-size: 3em;
+      margin-bottom: 15px;
+      display: block;
+    }
+
+    .feature-item h3 {
+      color: #667eea;
+      margin: 15px 0;
+      font-size: 1.3em;
+    }
+
+    .feature-item p {
+      color: #666;
+      line-height: 1.6;
+    }
+
+    .footer {
+      background: #222;
+      color: white;
+      text-align: center;
+      padding: 40px 20px;
+      font-size: 0.95em;
+    }
+
+    .footer p {
+      margin: 10px 0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .hero-content h1 {
+        font-size: 2em;
+      }
+
+      .hero-subtitle {
+        font-size: 1em;
+      }
+
+      .menu-section h2,
+      .features-section h2,
+      .about-section h2 {
+        font-size: 1.8em;
+      }
+
+      .cards-container {
+        grid-template-columns: 1fr;
+      }
+
+      .navbar a {
+        margin-right: 10px;
+        font-size: 0.9em;
+      }
+    }
+  </style>
 </body>
 
 </html>

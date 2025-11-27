@@ -1,7 +1,12 @@
-html,
-body {
+* {
   margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
   height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .thumb {
@@ -14,27 +19,37 @@ body {
 
 #c {
   width: 100%;
-  height: 100%;
+  height: calc(100vh - 60px);
   display: block;
+  position: fixed;
+  top: 60px;
+  left: 0;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .split {
-  position: absolute;
+  position: fixed;
   left: 0;
-  top: 0;
+  top: 60px;
   width: 100%;
-  height: 100%;
+  height: calc(100vh - 60px);
   display: flex;
+  overflow: hidden;
+  pointer-events: auto;
+  z-index: 2;
 }
 
 .split>div {
   width: 100%;
   height: 100%;
+  pointer-events: auto;
 }
 
 #view1 {
   width: 100% !important;
   height: 100% !important;
+  pointer-events: auto !important;
 }
 
 #view2 {
@@ -47,37 +62,403 @@ body {
   border-radius: 8px !important;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
   z-index: 100 !important;
-}
-
-#c {
-  pointer-events: auto;
-  z-index: 2;
-}
-
-.split {
-  pointer-events: auto;
-}
-
-#view1, #view2 {
-  pointer-events: auto;
+  pointer-events: auto !important;
 }
 
 .navbar {
-  position: absolute;
+  position:absolute;
+  background:white;
+  padding:8px 12px;
+  border-radius:8px;
+  font-size:14px;
+  display:none;
+  box-shadow:0 2px 10px rgba(0,0,0,0.3);
+}
+
+/* Navbar Styles */
+.navbar {
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 9999;
-  background: #222;
+  z-index: 1000;
+  background: rgba(34, 34, 34, 0.98);
+  backdrop-filter: blur(10px);
+  padding: 15px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
+  height: 60px;
 }
 
-.navbar a {
+.navbar-brand {
   color: white;
-  margin-right: 15px;
+  font-size: 1.4em;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+}
+
+.navbar-brand:hover {
+  opacity: 0.8;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 15px;
+}
+
+.navbar-links a {
+  color: white;
   text-decoration: none;
   font-weight: 600;
+  transition: all 0.3s ease;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.95em;
 }
 
-.navbar a:hover {
-  text-decoration: underline;
+.navbar-links a:hover {
+  background: rgba(102, 126, 234, 0.4);
+  color: #a0d8ff;
+}
+
+/* Main Container - with padding top for navbar */
+.home-container {
+  margin-top: 60px;
+  min-height: calc(100vh - 60px);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 100px 20px;
+  text-align: center;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-content h1 {
+  font-size: 3.5em;
+  margin: 0 0 20px 0;
+  font-weight: bold;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+  letter-spacing: -1px;
+}
+
+.hero-subtitle {
+  font-size: 1.3em;
+  margin: 0;
+  opacity: 0.95;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+  font-weight: 300;
+}
+
+/* About Section */
+.about-section {
+  background: white;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.about-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.about-section h2 {
+  font-size: 2.8em;
+  margin: 0 0 30px 0;
+  color: #667eea;
+  font-weight: 700;
+}
+
+.about-section p {
+  font-size: 1.15em;
+  line-height: 1.8;
+  color: #555;
+}
+
+/* Menu Section */
+.menu-section {
+  padding: 80px 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.menu-section h2 {
+  text-align: center;
+  font-size: 2.8em;
+  margin: 0 0 60px 0;
+  color: #667eea;
+  font-weight: 700;
+}
+
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 35px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.4s ease;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+}
+
+.card-header {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  transition: background 0.3s ease;
+}
+
+.card:hover .card-header::before {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 2em;
+  font-weight: 700;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+  position: relative;
+  z-index: 1;
+}
+
+.kaabah-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.pyramid-card {
+  background: linear-gradient(135deg, #d4a574 0%, #a0826d 100%);
+}
+
+.louvre-card {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.card-body {
+  padding: 30px;
+}
+
+.card-body p {
+  margin: 0 0 25px 0;
+  line-height: 1.7;
+  color: #555;
+  font-size: 1em;
+}
+
+.card-features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 25px 0;
+}
+
+.feature {
+  font-size: 0.9em;
+  color: #667eea;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 14px 32px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+/* Features Section */
+.features-section {
+  padding: 80px 20px;
+  background: white;
+}
+
+.features-section h2 {
+  text-align: center;
+  font-size: 2.8em;
+  margin: 0 0 60px 0;
+  color: #667eea;
+  font-weight: 700;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.feature-item {
+  text-align: center;
+  padding: 30px 20px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+  background: #f8f9fa;
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 3.5em;
+  margin-bottom: 20px;
+  display: block;
+  filter: grayscale(0.2);
+}
+
+.feature-item h3 {
+  color: #667eea;
+  margin: 20px 0;
+  font-size: 1.4em;
+  font-weight: 700;
+}
+
+.feature-item p {
+  color: #666;
+  line-height: 1.7;
+  font-size: 1em;
+}
+
+/* Footer */
+.footer {
+  background: #222;
+  color: white;
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.footer p {
+  margin: 12px 0;
+  opacity: 0.9;
+}
+
+.footer p:first-child {
+  font-weight: 600;
+  font-size: 1.05em;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 12px 15px;
+  }
+
+  .navbar-brand {
+    font-size: 1.1em;
+  }
+
+  .navbar-links {
+    gap: 8px;
+  }
+
+  .navbar-links a {
+    padding: 6px 10px;
+    font-size: 0.85em;
+  }
+
+  .hero {
+    padding: 60px 20px;
+    min-height: 300px;
+  }
+
+  .hero-content h1 {
+    font-size: 2.2em;
+  }
+
+  .hero-subtitle {
+    font-size: 1.05em;
+  }
+
+  .about-section,
+  .menu-section,
+  .features-section {
+    padding: 50px 20px;
+  }
+
+  .menu-section h2,
+  .features-section h2,
+  .about-section h2 {
+    font-size: 2em;
+    margin-bottom: 40px;
+  }
+
+  .cards-container {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .features-grid {
+    gap: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-links {
+    gap: 5px;
+  }
+
+  .navbar-links a {
+    padding: 5px 8px;
+    font-size: 0.8em;
+  }
+
+  .hero-content h1 {
+    font-size: 1.8em;
+  }
+}
+
+/* Lil-GUI Controls - Position below navbar */
+.lil-gui {
+   margin-top: 60px !important;
 }
