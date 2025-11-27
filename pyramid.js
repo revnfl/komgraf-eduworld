@@ -110,7 +110,7 @@ function main() {
   }
 
   // === Time-based Lighting System ===
-  const timeState = { minutes: 710 }; // 0-1440 (0:00 - 23:59)
+  const timeState = { minutes: 710 }; // 0-1440 (0:00 - 23:59) -> 710 = 11:50 AM
 
   function getFormattedTime(minutes) {
     const hours = Math.floor(minutes / 60);
@@ -379,7 +379,6 @@ function main() {
       );
     }
   );
-
 
   // === Position group ===
   pyramidGroup.position.set(0, 0, 0);
