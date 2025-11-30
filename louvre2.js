@@ -24,7 +24,7 @@ function main() {
   // Sky texture - bisa diganti dengan texture Anda
   const textureLoader = new THREE.TextureLoader();
   const skyTexture = textureLoader.load(
-    'textures/sky.jpg',
+    'public/textures/sky.jpg',
     () => console.log('Sky texture loaded'),
     undefined,
     () => {
@@ -117,7 +117,7 @@ function main() {
 
   // === Load Textures ===
   const groundTexture = textureLoader.load(
-    'textures/ground.jpg',
+    'public/textures/ground.jpg',
     (tex) => {
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
@@ -129,7 +129,7 @@ function main() {
   );
 
   const waterTexture = textureLoader.load(
-    'textures/water.jpg',
+    'public/textures/water.jpg',
     (tex) => {
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
@@ -141,7 +141,7 @@ function main() {
   );
 
   const glassTexture = textureLoader.load(
-    'textures/glass.jpg',
+    'public/textures/glass.jpg',
     () => console.log('Glass texture loaded'),
     undefined,
     () => console.log('Glass texture not found')

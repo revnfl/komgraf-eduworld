@@ -4,8 +4,8 @@ import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
 // config textures
 const TEXTURES = {
-  sky: 'textures/louvresky.jpeg',
-  ground: 'textures/louvrepaving2.jpg'
+  sky: 'public/textures/louvresky.jpeg',
+  ground: 'public/textures/louvrepaving2.jpg'
 };
 
 // pengaturan buat si pyramid
