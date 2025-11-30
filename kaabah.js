@@ -21,7 +21,7 @@ function main() {
   const scene = new THREE.Scene();
 
   // === Space background ===
-  const skyTexture = new THREE.TextureLoader().load('public/textures/blue-sky.jpg');
+  const skyTexture = new THREE.TextureLoader().load('textures/blue-sky.jpg');
   skyTexture.colorSpace = THREE.SRGBColorSpace;
   scene.background = skyTexture;
 
@@ -263,7 +263,7 @@ function main() {
   // === Geometry ===
   const planeSize = 1000;
   const loader = new THREE.TextureLoader();
-  const texture = loader.load('public/textures/white-marble.jpg');
+  const texture = loader.load('textures/white-marble.jpg');
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
   texture.magFilter = THREE.NearestFilter;
@@ -290,7 +290,7 @@ function main() {
   const gltfLoader = new GLTFLoader();
 
   gltfLoader.load(
-    'public/models/kaabah.glb',
+    'models/kaabah.glb',
     (gltf) => {
       const model = gltf.scene;
       model.scale.set(2, 2, 2);

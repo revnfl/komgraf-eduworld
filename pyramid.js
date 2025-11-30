@@ -27,7 +27,7 @@ function main() {
   const scene = new THREE.Scene();
 
   // === Space background ===
-  const skyTexture = new THREE.TextureLoader().load('public/textures/blue-sky.jpg');
+  const skyTexture = new THREE.TextureLoader().load('textures/blue-sky.jpg');
   skyTexture.colorSpace = THREE.SRGBColorSpace;
   scene.background = skyTexture;
 
@@ -280,7 +280,7 @@ function main() {
   const loader = new THREE.TextureLoader();
 
   // Clay texture
-  const clayTexture = loader.load('public/textures/clay.png');
+  const clayTexture = loader.load('textures/clay.png');
   clayTexture.wrapS = THREE.RepeatWrapping;
   clayTexture.wrapT = THREE.RepeatWrapping;
   clayTexture.magFilter = THREE.NearestFilter;
@@ -288,7 +288,7 @@ function main() {
   clayTexture.repeat.set(repeatsClay, repeatsClay);
   
   // Land texture
-  const landTexture = loader.load('public/textures/sand.png');
+  const landTexture = loader.load('textures/sand.png');
   landTexture.wrapS = THREE.RepeatWrapping;
   landTexture.wrapT = THREE.RepeatWrapping;
   landTexture.magFilter = THREE.NearestFilter;
@@ -297,7 +297,7 @@ function main() {
   landTexture.repeat.set(repeats, repeats);
 
   // Pyramid texture
-  const pyramidTexture = loader.load('public/textures/brick.jpg');
+  const pyramidTexture = loader.load('textures/brick.jpg');
   pyramidTexture.colorSpace = THREE.SRGBColorSpace;
   pyramidTexture.wrapS = THREE.RepeatWrapping;
   pyramidTexture.wrapT = THREE.RepeatWrapping;
@@ -351,7 +351,7 @@ function main() {
     // === Load Sphinx model ===
   const gltfLoader = new GLTFLoader();
   gltfLoader.load(
-    'public/models/sphinx.glb',
+    'models/sphinx.glb',
     (gltf) => {
       const sphinx = gltf.scene;
       sphinx.scale.set(0.5, 0.5, 0.5);
