@@ -3,12 +3,14 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
+const clock = new THREE.Clock();
+
 function main() {
   const canvas = document.querySelector('#c');
   const view1Elem = document.querySelector('#view1');
   const view2Elem = document.querySelector('#view2');
   const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
-  
+
   // Enable shadows
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -20,16 +22,37 @@ function main() {
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   camera.position.set(0, 10, 80);
 
-  // Initialize zoom value
+  // Initial zoom
   camera.zoom = 1.5;
   camera.updateProjectionMatrix();
 
+  // === Audio: Desert Wind Ambient ===
+  const listener = new THREE.AudioListener();
+  camera.add(listener);
+
+  const desertWind = new THREE.Audio(listener);
+  const audioLoader = new THREE.AudioLoader();
+
+  const soundState = {
+    enabled: true,
+    volume: 0.1,
+  };
+
+  audioLoader.load('audio/pyramid.mp3', (buffer) => {
+    desertWind.setBuffer(buffer);
+    desertWind.setLoop(true);
+    desertWind.setVolume(soundState.volume);
+    // tidak langsung play; nunggu interaksi user
+  });
+
   const scene = new THREE.Scene();
 
-  // === Space background ===
+  // === Sky background ===
   const skyTexture = new THREE.TextureLoader().load('textures/blue-sky.jpg');
   skyTexture.colorSpace = THREE.SRGBColorSpace;
   scene.background = skyTexture;
+
+  scene.fog = new THREE.Fog(0xc58b4b, 40, 260);
 
   // === Lights ===
   const dirLight = new THREE.DirectionalLight(0xffffff, 1);
@@ -56,6 +79,79 @@ function main() {
 
   const cameraHelper = new THREE.CameraHelper(camera);
   scene.add(cameraHelper);
+
+  // === Sand Storm Particles ===
+  const sandCount = 2500;
+  const sandGeometry = new THREE.BufferGeometry();
+  const sandPositions = new Float32Array(sandCount * 3);
+  const sandSpeeds = new Float32Array(sandCount);
+  const sandBaseHeights = new Float32Array(sandCount); 
+
+  // Arah angin 
+  const windDir = new THREE.Vector2(1.0, 0.25); 
+  windDir.normalize();
+
+  for (let i = 0; i < sandCount; i++) {
+    const i3 = i * 3;
+
+    sandPositions[i3 + 0] = (Math.random() - 0.5) * 450;   // x
+    sandBaseHeights[i] = Math.random() * 0.6 + 0.15;       
+    sandPositions[i3 + 1] = sandBaseHeights[i];            // y
+    sandPositions[i3 + 2] = (Math.random() - 0.5) * 450;   // z
+
+    sandSpeeds[i] = 0.05 + Math.random() * 0.08;           
+  }
+
+  sandGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(sandPositions, 3)
+  );
+
+  const sandMaterial = new THREE.PointsMaterial({
+    size: 0.06,                 // butiran kecil
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.35,
+    color: 0xcfa87a,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const sandStorm = new THREE.Points(sandGeometry, sandMaterial);
+  scene.add(sandStorm);
+
+  // === Animasi pasir ===
+  function animateSand() {
+    const positions = sandGeometry.attributes.position.array;
+    const time = performance.now() * 0.001;
+
+    for (let i = 0; i < sandCount; i++) {
+      const i3 = i * 3;
+
+      positions[i3 + 0] += windDir.x * sandSpeeds[i];
+      positions[i3 + 2] += windDir.y * sandSpeeds[i];
+
+      positions[i3 + 1] =
+        sandBaseHeights[i] + Math.sin(time * 1.5 + i) * 0.05;
+
+      const x = positions[i3 + 0];
+      const z = positions[i3 + 2];
+
+      const limit = 260;
+      if (x > limit || x < -limit || z > limit || z < -limit) {
+        const spawnOffset = -limit;
+
+        positions[i3 + 0] = -windDir.x * spawnOffset + (Math.random() - 0.5) * 40;
+        positions[i3 + 2] = -windDir.y * spawnOffset + (Math.random() - 0.5) * 40;
+
+        sandBaseHeights[i] = Math.random() * 0.6 + 0.15;
+        positions[i3 + 1] = sandBaseHeights[i];
+        sandSpeeds[i] = 0.05 + Math.random() * 0.08;
+      }
+    }
+
+    sandGeometry.attributes.position.needsUpdate = true;
+  }
 
   // === GUI Helpers ===
   class MinMaxGUIHelper {
@@ -110,7 +206,7 @@ function main() {
   }
 
   // === Time-based Lighting System ===
-  const timeState = { minutes: 710 }; // 0-1440 (0:00 - 23:59) -> 710 = 11:50 AM
+  const timeState = { minutes: 710 }; // 11:50
 
   function getFormattedTime(minutes) {
     const hours = Math.floor(minutes / 60);
@@ -119,66 +215,41 @@ function main() {
   }
 
   function updateLightingForTime(minutes) {
-    // Normalize time to 0-1 range (0 = midnight, 0.5 = noon, 1 = next midnight)
     const timeNorm = (minutes % 1440) / 1440;
-    
-    // Sun angle: -180° at midnight, 0° at 6 AM, 90° at noon, 180° at 6 PM
+
     const sunAngle = timeNorm * Math.PI * 2 - Math.PI;
-    
-    // Sun height: 0 at midnight/6am/6pm, max at noon
     const sunHeight = Math.max(0, Math.sin(timeNorm * Math.PI) * 50);
-    
-    // Horizontal position based on time
     const sunHorizontal = Math.cos(sunAngle) * 70;
-    
-    // Update light position (simulate sun movement)
+
     dirLight.position.set(sunHorizontal, sunHeight + 20, Math.sin(sunAngle) * 70);
-    
-    // Update light target (always look at center of scene)
     dirLight.target.position.set(0, 0, 0);
-    
-    // Update intensity based on sun height (0 at night, 1 at day)
+
     const daylight = Math.max(0.1, sunHeight / 50);
     dirLight.intensity = daylight;
-    
-    // Update light color based on time of day
+
     if (timeNorm < 0.25) {
-      // Night (0:00 - 6:00): dark blue
       dirLight.color.setHSL(0.6, 1, 0.3);
     } else if (timeNorm < 0.35) {
-      // Early morning (6:00 - 8:24): warm orange
       dirLight.color.setHSL(0.08, 1, 0.5);
     } else if (timeNorm < 0.5) {
-      // Morning to noon (8:24 - 12:00): bright yellow
       dirLight.color.setHSL(0.12, 1, 0.6);
     } else if (timeNorm < 0.65) {
-      // Noon to afternoon (12:00 - 15:36): white/bright yellow
       dirLight.color.setHSL(0.12, 0.8, 0.7);
     } else if (timeNorm < 0.75) {
-      // Late afternoon (15:36 - 18:00): warm orange
       dirLight.color.setHSL(0.08, 1, 0.5);
     } else if (timeNorm < 0.85) {
-      // Sunset (18:00 - 20:24): deep orange/red
       dirLight.color.setHSL(0.05, 1, 0.4);
     } else {
-      // Night (20:24 - 24:00): dark blue
       dirLight.color.setHSL(0.6, 1, 0.3);
     }
-    
-    // Update ambient light based on time
+
     ambLight.intensity = Math.max(0.1, daylight * 0.3);
-    
-    // === Update background brightness based on time ===
-    // Calculate background brightness: 0 = very dark (night), 1 = full brightness (noon)
-    let bgBrightness = daylight;
-    
-    // Apply brightness overlay to canvas
-    updateBackgroundBrightness(bgBrightness);
-    
+
+    updateBackgroundBrightness(daylight);
     updateLight();
   }
 
-  // === Background brightness control ===
+  // === Background brightness overlay ===
   let backgroundOverlay = null;
 
   function createBackgroundOverlay() {
@@ -200,20 +271,14 @@ function main() {
   }
 
   function updateBackgroundBrightness(brightness) {
-    // brightness: 0 = full darkness (night), 1 = full brightness (day)
-    // We want overlay opacity to be high (dark) at night and low (transparent) at day
     const overlay = createBackgroundOverlay();
-    const opacity = 1 - brightness; // Invert so high brightness = low opacity
-    
-    // Add slight color tint for time of day
+    const opacity = 1 - brightness;
+
     if (opacity > 0.7) {
-      // Night time - dark blue tint
       overlay.style.background = `rgba(20, 40, 40, ${opacity * 0.8})`;
     } else if (opacity > 0.4) {
-      // Early morning/evening - warm tint
       overlay.style.background = `rgba(40, 40, 20, ${opacity * 0.4})`;
     } else {
-      // Day time - minimal overlay
       overlay.style.background = `rgba(0, 0, 0, ${opacity * 0.3})`;
     }
   }
@@ -224,15 +289,37 @@ function main() {
   const minMaxGUIHelper = new MinMaxGUIHelper(camera, 'near', 'far', 0.01);
   gui.add(minMaxGUIHelper, 'min', 0.01, 100, 0.1).name('Near Value').onChange(updateCamera);
   gui.add(minMaxGUIHelper, 'max', 0.1, 250, 0.1).name('Far Value').onChange(updateCamera);
-  // Time slider
   gui.add(timeState, 'minutes', 0, 1439, 1)
     .name('Time of Day')
     .onChange((value) => {
       updateLightingForTime(value);
       updateTimeDisplay();
     });
-  
-  // Add time display label
+
+  // audio
+  const soundFolder = gui.addFolder('Desert Wind');
+  soundFolder.add(soundState, 'enabled')
+    .name('Enable sound')
+    .onChange((v) => {
+      if (v) {
+        if (desertWind.buffer && !desertWind.isPlaying) {
+          desertWind.play();
+        }
+      } else {
+        if (desertWind.isPlaying) {
+          desertWind.pause();
+        }
+      }
+    });
+
+  soundFolder.add(soundState, 'volume', 0, 1, 0.01)
+    .name('Volume')
+    .onChange((v) => {
+      desertWind.setVolume(v);
+    });
+  soundFolder.open();
+
+  // Time label
   const timeDisplay = document.createElement('div');
   timeDisplay.style.cssText = `
     position: absolute;
@@ -250,21 +337,18 @@ function main() {
   `;
   document.body.appendChild(timeDisplay);
 
-  // Update time display
   function updateTimeDisplay() {
     timeDisplay.textContent = `Time: ${getFormattedTime(timeState.minutes)}`;
   }
 
-  // Initialize lighting and display
   updateLightingForTime(timeState.minutes);
   updateTimeDisplay();
 
   // === Controls ===
   const controls = new OrbitControls(camera, view1Elem);
   controls.target.set(0, 5, 0);
-  // Prevent camera from going below the ground
-  controls.minPolarAngle = 0;             // straight ahead (horizontal)
-  controls.maxPolarAngle = Math.PI / 2;   // straight down (90°)
+  controls.minPolarAngle = 0;
+  controls.maxPolarAngle = Math.PI / 2;
   controls.update();
 
   const camera2 = new THREE.PerspectiveCamera(60, 2, 0.1, 500);
@@ -279,15 +363,13 @@ function main() {
   const planeSize = 500;
   const loader = new THREE.TextureLoader();
 
-  // Clay texture
   const clayTexture = loader.load('textures/clay.png');
   clayTexture.wrapS = THREE.RepeatWrapping;
   clayTexture.wrapT = THREE.RepeatWrapping;
   clayTexture.magFilter = THREE.NearestFilter;
   const repeatsClay = 15;
   clayTexture.repeat.set(repeatsClay, repeatsClay);
-  
-  // Land texture
+
   const landTexture = loader.load('textures/sand.png');
   landTexture.wrapS = THREE.RepeatWrapping;
   landTexture.wrapT = THREE.RepeatWrapping;
@@ -296,7 +378,6 @@ function main() {
   const repeats = planeSize / 2;
   landTexture.repeat.set(repeats, repeats);
 
-  // Pyramid texture
   const pyramidTexture = loader.load('textures/brick.jpg');
   pyramidTexture.colorSpace = THREE.SRGBColorSpace;
   pyramidTexture.wrapS = THREE.RepeatWrapping;
@@ -343,12 +424,10 @@ function main() {
   pyramid3Mesh.castShadow = true;
   pyramid3Mesh.receiveShadow = true;
 
-  // === Add to group ===
-  pyramidGroup.add(pyramid1Mesh);
-  pyramidGroup.add(pyramid2Mesh);
-  pyramidGroup.add(pyramid3Mesh);
+  pyramidGroup.add(pyramid1Mesh, pyramid2Mesh, pyramid3Mesh);
+  pyramidGroup.position.set(0, 0, 0);
 
-    // === Load Sphinx model ===
+  // === Sphinx model ===
   const gltfLoader = new GLTFLoader();
   gltfLoader.load(
     'models/sphinx.glb',
@@ -356,7 +435,7 @@ function main() {
       const sphinx = gltf.scene;
       sphinx.scale.set(0.5, 0.5, 0.5);
       sphinx.position.set(0, 1.8, 30);
-      sphinx.rotation.set(0, 300, 0);
+      sphinx.rotation.set(0, THREE.MathUtils.degToRad(300), 0);
 
       sphinx.traverse((node) => {
         if (node.isMesh) {
@@ -368,22 +447,104 @@ function main() {
 
       scene.add(sphinx);
 
-      // Tambahkan hotspot otomatis
+      // === HOTSPOT SPHINX ===
       createHotspotOnObject(
         sphinx,
         0.4,
-        `<b>Sphinx</b><br>
-        Model GLB<br>
-        Tekstur: clay.png<br>
-        Posisi di depan piramida.`
+        `
+        <div style="width: 600px; max-width: 100%;">
+          <img src="textures/Sphinx.png"
+               alt="Great Sphinx of Giza"
+               style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
+          <h3 style="margin:0 0 6px; font-size:18px;">Great Sphinx of Giza</h3>
+          <p style="margin:0; font-size:14px; line-height:1.4;">
+            Limestone statue with a human head and lion body, believed to represent Pharaoh Khafre.
+          </p>
+        </div>
+        `
       );
     }
   );
 
-  // === Position group ===
-  pyramidGroup.position.set(0, 0, 0);
+  // === Camel Caravan ===
+  gltfLoader.load(
+    'models/camel.glb',
+    (gltf) => {
+      const originalCamel = gltf.scene;
+      originalCamel.scale.set(0.01, 0.01, 0.01);
 
-  // === Render functions ===
+      const camelPositions = [
+        { x: -50, z: -15, rotY: Math.random() * Math.PI * 2 },
+        { x: -30, z: 25, rotY: Math.random() * Math.PI * 2 },
+        { x: -50, z: 25, rotY: Math.random() * Math.PI * 2 },
+        { x: 45, z: -5, rotY: Math.random() * Math.PI * 2 },
+        { x: 55, z: 30, rotY: Math.random() * Math.PI * 2 },
+        { x: -15, z: 55, rotY: Math.random() * Math.PI * 2 },
+      ];
+
+      camelPositions.forEach((cfg, index) => {
+        const camel = originalCamel.clone(true);
+        camel.position.set(cfg.x, 0.1, cfg.z);
+        camel.rotation.y = cfg.rotY;
+
+        camel.traverse((node) => {
+          if (node.isMesh) {
+            node.castShadow = true;
+            node.receiveShadow = true;
+          }
+        });
+
+        scene.add(camel);
+
+        // HOTSPOT CAMEL 
+        if (index === 2) {
+          createHotspotOnObject(
+            camel,
+            0.8,
+            `
+            <div style="width: 600px; max-width: 100%;">
+              <img src="textures/camel.png"
+                   alt="Desert Caravan Camels"
+                   style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
+              <h3 style="margin:0 0 6px; font-size:18px;">Desert Caravan Camels</h3>
+              <p style="margin:0; font-size:14px; line-height:1.4;">
+                Camels were not used for pyramid construction, but served as transport for
+                long-distance travel and trade across the desert in caravan groups.
+              </p>
+            </div>
+            `
+          );
+        }
+      });
+    }
+  );
+
+  // === Desert Dunes ===
+  const dunesGroup = new THREE.Group();
+
+  function createDune(x, z, radius = 20, height = 5) {
+    const geo = new THREE.ConeGeometry(radius, height, 32);
+    const mat = new THREE.MeshPhongMaterial({
+      map: landTexture,
+      shininess: 8,
+    });
+
+    const dune = new THREE.Mesh(geo, mat);
+    dune.position.set(x, height / 2, z);
+    dune.castShadow = true;
+    dune.receiveShadow = true;
+
+    dunesGroup.add(dune);
+  }
+
+  createDune(-60, -40, 25, 7);
+  createDune(70, -20, 22, 6);
+  createDune(-40, 60, 20, 5);
+  createDune(60, 80, 28, 8);
+
+  scene.add(dunesGroup);
+
+  // === Render helpers ===
   function resizeRendererToDisplaySize(renderer) {
     const canvas = renderer.domElement;
     const width = canvas.clientWidth;
@@ -408,20 +569,17 @@ function main() {
     return width / height;
   }
 
-  // === Hotspot Raycasting Setup ===
+  // === Hotspot Raycasting ===
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   const hotspots = [];
   let activeHotspot = null;
 
-  // Ambil elemen popup dari HTML
-  const popup = document.getElementById("popup");
+  const popup = document.getElementById('popup');
 
   function updatePopupPosition(hotspot) {
     const pos = new THREE.Vector3();
     hotspot.getWorldPosition(pos);
-
-    // Convert 3D → Normalized Device Coordinates
     pos.project(camera);
 
     const rect = renderer.domElement.getBoundingClientRect();
@@ -434,7 +592,11 @@ function main() {
 
   function createHotspot(position, html) {
     const geo = new THREE.SphereGeometry(0.5, 16, 16);
-    const mat = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 0.25, transparent: true });
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      opacity: 0.25,
+      transparent: true,
+    });
     const mesh = new THREE.Mesh(geo, mat);
 
     mesh.position.copy(position);
@@ -446,13 +608,11 @@ function main() {
     return mesh;
   }
 
-
   function createHotspotOnObject(object3D, offsetY, html) {
     const box = new THREE.Box3().setFromObject(object3D);
     const center = new THREE.Vector3();
     box.getCenter(center);
 
-    // Tempatkan hotspot di atas model
     const hotspotPos = new THREE.Vector3(
       center.x,
       box.max.y + offsetY,
@@ -462,100 +622,124 @@ function main() {
     return createHotspot(hotspotPos, html);
   }
 
-
-  // === Create Hotspots ===
-
-  // Hotspot Pyramid 1
+  // === Hotspot pyramids ===
   createHotspotOnObject(
     pyramid1Mesh,
-    1, // offset di atas puncak
-    `<b>Pyramid Besar</b><br>
-    Tinggi: 15m<br>
-    Menggunakan ConeGeometry.<br>
-    Tekstur: brick.jpg`
+    1,
+    `
+    <div style="width: 600px; max-width: 100%;">
+      <img src="textures/Khufu.png"
+           alt="Great Pyramid of Giza (Khufu)"
+           style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
+      <h3 style="margin:0 0 6px; font-size:18px;">Great Pyramid of Giza (Khufu)</h3>
+      <p style="margin:0; font-size:14px; line-height:1.4;">
+        Largest and oldest pyramid in the Giza complex, built as the tomb of Pharaoh Khufu.
+      </p>
+    </div>
+    `
   );
 
-  // Hotspot Pyramid 2
   createHotspotOnObject(
     pyramid2Mesh,
     1,
-    `<b>Pyramid Kedua</b><br>
-    Tinggi: 9m<br>
-    Lokasi timur laut piramida utama.`
+    `
+    <div style="width: 600px; max-width: 100%;">
+      <img src="textures/Khafre.png"
+           alt="Pyramid of Khafre"
+           style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
+      <h3 style="margin:0 0 6px; font-size:18px;">Pyramid of Khafre</h3>
+      <p style="margin:0; font-size:14px; line-height:1.4;">
+        Second-largest pyramid at Giza, associated with Pharaoh Khafre and the nearby Great Sphinx.
+      </p>
+    </div>
+    `
   );
 
-  // Hotspot Pyramid 3
   createHotspotOnObject(
     pyramid3Mesh,
     1,
-    `<b>Pyramid Ketiga</b><br>
-    Ukuran paling kecil<br>
-    Radius: 6m`
+    `
+    <div style="width: 600px; max-width: 100%;">
+      <img src="textures/Menkaure.png"
+           alt="Pyramid of Menkaure"
+           style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
+      <h3 style="margin:0 0 6px; font-size:18px;">Pyramid of Menkaure</h3>
+      <p style="margin:0; font-size:14px; line-height:1.4;">
+        The smallest of the three main Giza pyramids, dedicated to Pharaoh Menkaure.
+      </p>
+    </div>
+    `
   );
 
-
   function onClick(event) {
-    // Determine which view was clicked and use appropriate camera
     let clickedCamera = camera;
     const rect = renderer.domElement.getBoundingClientRect();
-    const eventRect = event.target?.getBoundingClientRect?.() || rect;
-    
-    // Check if click came from view2 (right pane)
+
     const view2Rect = view2Elem.getBoundingClientRect();
     const clickX = event.clientX;
     if (clickX > view2Rect.left) {
       clickedCamera = camera2;
-      console.log('Using camera2 for raycasting');
-    } else {
-      console.log('Using camera1 for raycasting');
     }
 
     mouse.x = ((clickX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    console.log('Click at mouse coords:', mouse.x, mouse.y);
     raycaster.setFromCamera(mouse, clickedCamera);
     const intersects = raycaster.intersectObjects(hotspots, true);
-
-    console.log('Intersects found:', intersects.length, 'out of', hotspots.length, 'hotspots');
 
     if (intersects.length > 0) {
       const hotspot = intersects[0].object;
 
-      // Toggle jika klik hotspot yang sama
       if (activeHotspot === hotspot) {
-        popup.style.display = "none";
+        popup.style.display = 'none';
         activeHotspot = null;
         return;
       }
 
-      // Tampilkan popup
       activeHotspot = hotspot;
       popup.innerHTML = hotspot.userData.info;
-      popup.style.display = "block";
+      popup.style.display = 'block';
       updatePopupPosition(hotspot);
     }
   }
 
-  renderer.domElement.addEventListener("click", onClick);
+  renderer.domElement.addEventListener('click', onClick);
 
-  // Handle clicks from view1 and view2 split panes
-  view1Elem.addEventListener("click", (e) => {
+  view1Elem.addEventListener('click', (e) => {
     if (e.target === view1Elem) {
       onClick(e);
     }
   });
-  view2Elem.addEventListener("click", (e) => {
+  view2Elem.addEventListener('click', (e) => {
     if (e.target === view2Elem) {
       onClick(e);
     }
   });
 
+  // === Mulai suara ===
+  let windStarted = false;
+  function startWindOnFirstInteraction() {
+    if (windStarted) return;
+    if (!soundState.enabled) return;
+
+    if (desertWind.buffer && !desertWind.isPlaying) {
+      desertWind.play();
+      windStarted = true;
+      window.removeEventListener('pointerdown', startWindOnFirstInteraction);
+      window.removeEventListener('keydown', startWindOnFirstInteraction);
+    }
+  }
+  window.addEventListener('pointerdown', startWindOnFirstInteraction);
+  window.addEventListener('keydown', startWindOnFirstInteraction);
+
+  // === Render loop ===
   function render() {
+    animateSand();
+
     resizeRendererToDisplaySize(renderer);
     renderer.setScissorTest(true);
 
-    // Left view (main)
+    // Left view (kamera utama)
     {
       const aspect = setScissorForElement(view1Elem);
       camera.aspect = aspect;
@@ -565,7 +749,7 @@ function main() {
       renderer.render(scene, camera);
     }
 
-    // Right view (second camera)
+    // Right view (mini-map / kamera 2)
     {
       const aspect = setScissorForElement(view2Elem);
       camera2.aspect = aspect;
@@ -574,11 +758,13 @@ function main() {
       renderer.render(scene, camera2);
     }
 
-    requestAnimationFrame(render);
-
+    // Update posisi popup kalau ada hotspot aktif
     if (activeHotspot) {
       updatePopupPosition(activeHotspot);
     }
+
+    // Loop lagi
+    requestAnimationFrame(render);
   }
 
   requestAnimationFrame(render);
