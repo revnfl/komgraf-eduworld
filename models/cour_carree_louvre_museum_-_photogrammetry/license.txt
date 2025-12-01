@@ -1,0 +1,11 @@
+Model Information:
+* title:	Cour carrée, Louvre Museum - photogrammetry
+* source:	https://sketchfab.com/3d-models/cour-carree-louvre-museum-photogrammetry-e9f3c2b10f1343e4a5f2d5ead9375c77
+* author:	Nicolas Diolez (https://sketchfab.com/nicolasdiolez)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Cour carrée, Louvre Museum - photogrammetry" (https://sketchfab.com/3d-models/cour-carree-louvre-museum-photogrammetry-e9f3c2b10f1343e4a5f2d5ead9375c77) by Nicolas Diolez (https://sketchfab.com/nicolasdiolez) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)

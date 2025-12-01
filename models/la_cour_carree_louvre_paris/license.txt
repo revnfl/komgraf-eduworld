@@ -1,0 +1,11 @@
+Model Information:
+* title:	La Cour Carrée, Louvre, Paris
+* source:	https://sketchfab.com/3d-models/la-cour-carree-louvre-paris-8d7f36be9a4345b3ba3d5a991f91836f
+* author:	HoangHiepVu (https://sketchfab.com/HoangHiepVu)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "La Cour Carrée, Louvre, Paris" (https://sketchfab.com/3d-models/la-cour-carree-louvre-paris-8d7f36be9a4345b3ba3d5a991f91836f) by HoangHiepVu (https://sketchfab.com/HoangHiepVu) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
