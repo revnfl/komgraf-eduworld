@@ -295,10 +295,8 @@ function main() {
       updateLightingForTime(value);
       updateTimeDisplay();
     });
-
   // audio
-  const soundFolder = gui.addFolder('Desert Wind');
-  soundFolder.add(soundState, 'enabled')
+  gui.add(soundState, 'enabled')
     .name('Enable sound')
     .onChange((v) => {
       if (v) {
@@ -311,13 +309,11 @@ function main() {
         }
       }
     });
-
-  soundFolder.add(soundState, 'volume', 0, 1, 0.01)
+  gui.add(soundState, 'volume', 0, 1, 0.01)
     .name('Volume')
     .onChange((v) => {
       desertWind.setVolume(v);
     });
-  soundFolder.open();
 
   // Time label
   const timeDisplay = document.createElement('div');
