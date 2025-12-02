@@ -11,14 +11,91 @@ function main() {
   const view2Elem = document.querySelector('#view2');
   const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
 
-  const fov = 45;
+  const fov = 75;
   const aspect = 2;
-  const near = 10;
-  const far = 1000;
+  const near = 0.1;
+  const far = 500;
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   camera.position.set(60, 40, 50);
 
   const scene = new THREE.Scene();
+
+  // Initial zoom
+  camera.zoom = 1.5;
+  camera.updateProjectionMatrix();
+
+  // === Sand Storm Particles ===
+  const sandCount = 2500;
+  const sandGeometry = new THREE.BufferGeometry();
+  const sandPositions = new Float32Array(sandCount * 3);
+  const sandSpeeds = new Float32Array(sandCount);
+  const sandBaseHeights = new Float32Array(sandCount);
+
+  // Arah angin 
+  const windDir = new THREE.Vector2(1.0, 0.25);
+  windDir.normalize();
+
+  for (let i = 0; i < sandCount; i++) {
+    const i3 = i * 3;
+
+    sandPositions[i3 + 0] = (Math.random() - 0.5) * 450;   // x
+    sandBaseHeights[i] = Math.random() * 0.6 + 0.15;
+    sandPositions[i3 + 1] = sandBaseHeights[i];            // y
+    sandPositions[i3 + 2] = (Math.random() - 0.5) * 450;   // z
+
+    sandSpeeds[i] = 0.05 + Math.random() * 0.08;
+  }
+
+  sandGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(sandPositions, 3)
+  );
+
+  const sandMaterial = new THREE.PointsMaterial({
+    size: 0.06,                 // butiran kecil
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.35,
+    color: 0xcfa87a,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const sandStorm = new THREE.Points(sandGeometry, sandMaterial);
+  scene.add(sandStorm);
+
+  // === Animasi pasir ===
+  function animateSand() {
+    const positions = sandGeometry.attributes.position.array;
+    const time = performance.now() * 0.001;
+
+    for (let i = 0; i < sandCount; i++) {
+      const i3 = i * 3;
+
+      positions[i3 + 0] += windDir.x * sandSpeeds[i];
+      positions[i3 + 2] += windDir.y * sandSpeeds[i];
+
+      positions[i3 + 1] =
+        sandBaseHeights[i] + Math.sin(time * 1.5 + i) * 0.05;
+
+      const x = positions[i3 + 0];
+      const z = positions[i3 + 2];
+
+      const limit = 260;
+      if (x > limit || x < -limit || z > limit || z < -limit) {
+        const spawnOffset = -limit;
+
+        positions[i3 + 0] = -windDir.x * spawnOffset + (Math.random() - 0.5) * 40;
+        positions[i3 + 2] = -windDir.y * spawnOffset + (Math.random() - 0.5) * 40;
+
+        sandBaseHeights[i] = Math.random() * 0.6 + 0.15;
+        positions[i3 + 1] = sandBaseHeights[i];
+        sandSpeeds[i] = 0.05 + Math.random() * 0.08;
+      }
+    }
+
+    sandGeometry.attributes.position.needsUpdate = true;
+  }
 
   // === Space background ===
   const skyTexture = new THREE.TextureLoader().load('textures/blue-sky.jpg');
@@ -221,7 +298,7 @@ function main() {
       updateLightingForTime(value);
       updateTimeDisplay();
     });
-  
+
   // Add time display label
   const timeDisplay = document.createElement('div');
   timeDisplay.style.cssText = `
@@ -250,6 +327,8 @@ function main() {
   // === Controls ===
   const controls = new OrbitControls(camera, view1Elem);
   controls.target.set(0, 5, 0);
+  controls.minPolarAngle = 0;
+  controls.maxPolarAngle = Math.PI / 2;
   controls.update();
 
   const camera2 = new THREE.PerspectiveCamera(60, 2, 0.1, 500);
