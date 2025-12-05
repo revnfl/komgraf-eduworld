@@ -11,14 +11,91 @@ function main() {
   const view2Elem = document.querySelector('#view2');
   const renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
 
-  const fov = 45;
+  const fov = 75;
   const aspect = 2;
-  const near = 10;
-  const far = 1000;
+  const near = 0.1;
+  const far = 500;
   const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
   camera.position.set(60, 40, 50);
 
   const scene = new THREE.Scene();
+
+  // Initial zoom
+  camera.zoom = 1.5;
+  camera.updateProjectionMatrix();
+
+  // === Sand Storm Particles ===
+  const sandCount = 2500;
+  const sandGeometry = new THREE.BufferGeometry();
+  const sandPositions = new Float32Array(sandCount * 3);
+  const sandSpeeds = new Float32Array(sandCount);
+  const sandBaseHeights = new Float32Array(sandCount);
+
+  // Arah angin 
+  const windDir = new THREE.Vector2(1.0, 0.25);
+  windDir.normalize();
+
+  for (let i = 0; i < sandCount; i++) {
+    const i3 = i * 3;
+
+    sandPositions[i3 + 0] = (Math.random() - 0.5) * 450;   // x
+    sandBaseHeights[i] = Math.random() * 0.6 + 0.15;
+    sandPositions[i3 + 1] = sandBaseHeights[i];            // y
+    sandPositions[i3 + 2] = (Math.random() - 0.5) * 450;   // z
+
+    sandSpeeds[i] = 0.05 + Math.random() * 0.08;
+  }
+
+  sandGeometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(sandPositions, 3)
+  );
+
+  const sandMaterial = new THREE.PointsMaterial({
+    size: 0.06,                 // butiran kecil
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.35,
+    color: 0xcfa87a,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+  });
+
+  const sandStorm = new THREE.Points(sandGeometry, sandMaterial);
+  scene.add(sandStorm);
+
+  // === Animasi pasir ===
+  function animateSand() {
+    const positions = sandGeometry.attributes.position.array;
+    const time = performance.now() * 0.001;
+
+    for (let i = 0; i < sandCount; i++) {
+      const i3 = i * 3;
+
+      positions[i3 + 0] += windDir.x * sandSpeeds[i];
+      positions[i3 + 2] += windDir.y * sandSpeeds[i];
+
+      positions[i3 + 1] =
+        sandBaseHeights[i] + Math.sin(time * 1.5 + i) * 0.05;
+
+      const x = positions[i3 + 0];
+      const z = positions[i3 + 2];
+
+      const limit = 260;
+      if (x > limit || x < -limit || z > limit || z < -limit) {
+        const spawnOffset = -limit;
+
+        positions[i3 + 0] = -windDir.x * spawnOffset + (Math.random() - 0.5) * 40;
+        positions[i3 + 2] = -windDir.y * spawnOffset + (Math.random() - 0.5) * 40;
+
+        sandBaseHeights[i] = Math.random() * 0.6 + 0.15;
+        positions[i3 + 1] = sandBaseHeights[i];
+        sandSpeeds[i] = 0.05 + Math.random() * 0.08;
+      }
+    }
+
+    sandGeometry.attributes.position.needsUpdate = true;
+  }
 
   // === Space background ===
   const skyTexture = new THREE.TextureLoader().load('textures/blue-sky.jpg');
@@ -221,7 +298,7 @@ function main() {
       updateLightingForTime(value);
       updateTimeDisplay();
     });
-  
+
   // Add time display label
   const timeDisplay = document.createElement('div');
   timeDisplay.style.cssText = `
@@ -250,6 +327,8 @@ function main() {
   // === Controls ===
   const controls = new OrbitControls(camera, view1Elem);
   controls.target.set(0, 5, 0);
+  controls.minPolarAngle = 0;
+  controls.maxPolarAngle = Math.PI / 2;
   controls.update();
 
   const camera2 = new THREE.PerspectiveCamera(60, 2, 0.1, 500);
@@ -326,7 +405,7 @@ function main() {
       `;
 
       // ====== HOTSPOT HAJAR ASWAD ======
-      const hotspotHajarGeo = new THREE.SphereGeometry(0.6, 16, 16);
+      const hotspotHajarGeo = new THREE.SphereGeometry(0.3, 16, 16);
       const hotspotHajarMat = new THREE.MeshBasicMaterial({
         color: 0xffffff,
         transparent: true,
@@ -335,7 +414,7 @@ function main() {
       });
       const hotspotHajarAswad = new THREE.Mesh(hotspotHajarGeo, hotspotHajarMat);
 
-      hotspotHajarAswad.position.set(-5, 1.5, 5);
+      hotspotHajarAswad.position.set(-4.8, 1.6, 4.8);
       hotspotHajarAswad.userData.info = `
         <img src="https://upload.wikimedia.org/wikipedia/commons/f/f3/The_Blackstone.jpg" class="thumb">
         <b>Hajar Aswad</b><br>
@@ -343,6 +422,91 @@ function main() {
         Banyak riwayat menyebutkan warnanya dahulu lebih cerah, lalu menghitam karena "<i>dosa manusia</i>".
       `;
 
+      // ====== HOTSPOT MULTAZAM ======
+      const hotspotMultazamGeo = new THREE.SphereGeometry(0.3, 16, 16);
+      const hotspotMultazamMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false
+      });
+      const hotspotMultazam = new THREE.Mesh(hotspotMultazamGeo, hotspotMultazamMat);
+
+      hotspotMultazam.position.set(-3.5, 1.6, 4.8);
+      hotspotMultazam.userData.info = `
+        <b>Multazam</b><br>
+        Area dinding Ka'bah yang terletak di antara Hajar Aswad dan pintu Ka'bah, tempat ini dipercaya sebagai salah satu lokasi paling mustajab untuk berdoa.
+        Umat Muslim sering menempelkan dada, wajah, dan tangan mereka ke dinding ini sambil memanjatkan doa dan permohonan kepada Allah SWT.
+      `;
+
+      // ====== HOTSPOT PINTU KABAH ======
+      const hotspotPintuKaabahGeo = new THREE.SphereGeometry(0.4, 16, 16);
+      const hotspotPintuKaabahMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false
+      });
+      const hotspotPintuKaabah = new THREE.Mesh(hotspotPintuKaabahGeo, hotspotPintuKaabahMat);
+
+      hotspotPintuKaabah.position.set(-1, 5, 4.8);
+      hotspotPintuKaabah.userData.info = `
+        <img src="https://hidayatullah.com/wp-content/uploads/2021/04/Enam-Pintu-Kabah-Dari-Sejak-5.000-Tahun-Lalu-e1617293226430.jpg" class="thumb">
+        <b>Pintu Ka'bah</b><br>
+        Terbuat dari emas dan berada sekitar 2,2 meter dari permukaan tanah. Dibuka hanya beberapa kali dalam setahun untuk keperluan tertentu.
+      `;
+
+      // ====== HOTSPOT HIJR ISMAIL ======
+      const hotspotHijrIsmailGeo = new THREE.SphereGeometry(0.6, 16, 16);
+      const hotspotHijrIsmailMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false
+      });
+      const hotspotHijrIsmail = new THREE.Mesh(hotspotHijrIsmailGeo, hotspotHijrIsmailMat);
+
+      hotspotHijrIsmail.position.set(12.5, 0.5, 0);
+      hotspotHijrIsmail.userData.info = `
+        <b>Hijr Ismail</b><br>
+        Area berbentuk setengah lingkaran yang terletak di sebelah utara Ka'bah, ditandai oleh dinding rendah dan dianggap sebagai bagian dari Ka'bah itu sendiri. 
+        Tempat ini dianggap suci, menjadi lokasi salat, dan banyak yang meyakini sebagai tempat yang mustajab untuk berdoa.
+      `;
+
+      // ====== HOTSPOT MAQAM IBRAHIM ======
+      const hotspotMaqamIbrahimGeo = new THREE.SphereGeometry(0.6, 16, 16);
+      const hotspotMaqamIbrahimMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false
+      });
+      const hotspotMaqamIbrahim = new THREE.Mesh(hotspotMaqamIbrahimGeo, hotspotMaqamIbrahimMat);
+
+      hotspotMaqamIbrahim.position.set(0.5, 0.7, 12.2);
+      hotspotMaqamIbrahim.userData.info = `
+        <img src="https://blue.kumparan.com/image/upload/fl_progressive,fl_lossy,c_fill,f_auto,q_auto:best,w_412/v1620216920/qr4xxhovluzxmucclpwh.jpg" class="thumb">
+        <b>Maqam Ibrahim</b><br>
+        Maqam Ibrahim adalah batu yang memiliki bekas telapak kaki Nabi Ibrahim AS dan digunakan sebagai tempatnya berdiri saat membangun Ka'bah.
+      `;
+
+      // ====== HOTSPOT KISWAH ======
+      const hotspotKiswahGeo = new THREE.SphereGeometry(0.6, 16, 16);
+      const hotspotKiswahMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false
+      });
+      const hotspotKiswah = new THREE.Mesh(hotspotKiswahGeo, hotspotKiswahMat);
+
+      hotspotKiswah.position.set(4.8, 5, 0);
+      hotspotKiswah.userData.info = `
+        <img src="https://img.antarafoto.com/cache/1200x800/2023/03/31/kiswah-kabah-di-masjid-surabaya-14vl9-dom.jpg" class="thumb">
+        <b>Kiswah</b><br>
+        kain hitam penutup Ka'bah yang disulam dengan ayat-ayat Al-Qur'an menggunakan benang emas dan perak. 
+        Kain ini diganti setiap tahun dalam upacara sakral, menandai dimulainya tahun baru Hijriah
+      `;
 
       // ====== HOTSPOT REGISTER ======
       model.add(hotspotRainGutter);
@@ -350,6 +514,21 @@ function main() {
 
       model.add(hotspotHajarAswad);
       hotspots.push(hotspotHajarAswad);
+
+      model.add(hotspotMultazam);
+      hotspots.push(hotspotMultazam);
+
+      model.add(hotspotPintuKaabah);
+      hotspots.push(hotspotPintuKaabah);
+
+      model.add(hotspotHijrIsmail);
+      hotspots.push(hotspotHijrIsmail);
+
+      model.add(hotspotMaqamIbrahim);
+      hotspots.push(hotspotMaqamIbrahim);
+
+      model.add(hotspotKiswah);
+      hotspots.push(hotspotKiswah);
     }
   );
 
