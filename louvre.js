@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const TEXTURES = {
     sky: 'https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?q=80&w=2574&auto=format&fit=crop',
@@ -15,8 +16,8 @@ const BUILDING_CONFIG = [
     {
         name: 'Richelieu Wing',
         description: 'Sayap utara yang membatasi Cour Napoléon. Awalnya dibangun untuk Kementerian Keuangan, kini menyimpan patung Prancis, seni dekoratif, dan barang antik Timur Dekat. Arsitekturnya menampilkan gaya Kekaisaran Kedua yang megah dengan atap mansard.',
-        modelPath: 'models/cour_carree_louvre_museum_-_photogrammetry/scene.gltf', 
-        position: { x: 0, y: 0, z: -120 },
+        modelPath: 'models/louvre.glb', 
+        position: { x: 0, y: 0, z: -90 },
         rotation: { x: 0, y: 0, z: 0 }, 
         placeholderSize: { w: 80, h: 40, d: 40 }, 
         scale: { x: 4, y: 4, z: 4 }, 
@@ -26,27 +27,28 @@ const BUILDING_CONFIG = [
     {
         name: 'Denon Wing',
         description: 'Sayap selatan yang terletak di sepanjang Sungai Seine. Sayap ini adalah yang paling ramai dikunjungi karena menampung Mona Lisa, lukisan Italia dan Spanyol, serta patung Romawi kuno. Dinamai dari Dominique Vivant Denon, direktur pertama museum.',
-        modelPath: 'models/cour_carree_louvre_museum_-_photogrammetry/scene.gltf', 
-        position: { x: 0, y: 0, z: 120 },
+        modelPath: 'models/louvre.glb', 
+        position: { x: 0, y: 0, z: 90 },
         rotation: { x: 0, y: Math.PI, z: 0 },
         placeholderSize: { w: 80, h: 40, d: 40 },
         scale: { x: 4, y: 4, z: 4 },
-        repeat: 2,
+        repeat:1,
         spacing: 85
     },
     {
         name: 'Sully Wing',
         description: 'Sayap timur yang mengelilingi Cour Carrée (Alun-alun Persegi). Ini adalah bagian tertua dari Louvre, berisi sejarah benteng abad pertengahan asli, barang antik Mesir (termasuk Sphinx Agung Tanis), dan barang antik Yunani.',
-        modelPath: 'models/cour_carree_louvre_museum_-_photogrammetry/scene.gltf', 
-        position: { x: -120, y: 0, z: 0 },
+        modelPath: 'models/louvre.glb', 
+        position: { x: -90, y: 0, z: 0 },
         rotation: { x: 0, y: -Math.PI / 2, z: 0 },
-        placeholderSize: { w: 80, h: 40, d: 40 }, 
+        placeholderSize: { w: 100, h: 40, d: 40 }, 
         scale: { x: 4, y: 4, z: 4 },
-        repeat: 1,
+        repeat: 2,
         spacing: 85,
         doubleSide: true
     }
 ];
+
 
 const PYRAMID_CONFIG = {
     radius: 22,
@@ -54,7 +56,7 @@ const PYRAMID_CONFIG = {
     segments: 4,
     heightSegments: 1,
     wireframeDivisions: 10,
-    description: 'Piramida Louvre adalah struktur kaca dan logam besar yang dirancang oleh arsitek Tiongkok-Amerika I.M. Pei. Diresmikan pada tahun 1989, piramida ini berfungsi sebagai pintu masuk utama ke museum. Kontras gaya modernnya dengan arsitektur klasik istana menjadikannya salah satu landmark paling ikonik di Paris.'
+    description: 'Piramida Louvre adalah struktur kaca dan logam besar karya I.M. Pei.'
 };
 
 const SCENE_CONFIG = {
@@ -114,9 +116,14 @@ function createSnow(count, range) {
 function createPyramid(config) {
     const group = new THREE.Group();
 
-    const pyramidMaterial = new THREE.MeshPhysicalMaterial({
-        color: 0xF5E6C4, emissive: 0x000000, metalness: 0.1, roughness: 0.1,
-        transparent: true, opacity: 0.6, transmission: 0.9, ior: 1.5, thickness: 0.5,
+    // OPTIMISASI: Ganti MeshPhysicalMaterial (berat) ke MeshStandardMaterial (ringan)
+    const pyramidMaterial = new THREE.MeshStandardMaterial({
+        color: 0xF5E6C4, 
+        emissive: 0x000000, 
+        metalness: 0.1, 
+        roughness: 0.1,
+        transparent: true, 
+        opacity: 0.4, // Transparansi biasa, bukan glass transmission
         side: THREE.DoubleSide
     });
 
@@ -131,8 +138,7 @@ function createPyramid(config) {
     pyramidGeometry.rotateY(Math.PI / 4);
 
     const pyramidMesh = new THREE.Mesh(pyramidGeometry, pyramidMaterial);
-    pyramidMesh.castShadow = true;
-    pyramidMesh.receiveShadow = true;
+    // Shadow dimatikan untuk performa
     group.add(pyramidMesh);
 
     const wireframePoints = [];
@@ -224,23 +230,20 @@ function createPool(width, length, tipOffset = 0) {
     
     animatedTextures.push(waterNormal);
 
-    const waterMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x8899a6,       
-    metalness: 0.6,      
-    roughness: 0.02,       
-    transmission: 0.2,     
-    opacity: 0.8,
-    transparent: true,
-    ior: 1.33,
-    thickness: 2.0,
-    normalMap: waterNormal,
-    normalScale: new THREE.Vector2(0.2, 0.2), 
-    side: THREE.DoubleSide
+    // OPTIMISASI: Ganti MeshPhysicalMaterial ke MeshStandardMaterial
+    const waterMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8899a6,       
+        metalness: 0.6,      
+        roughness: 0.1,       
+        opacity: 0.7,
+        transparent: true,
+        normalMap: waterNormal,
+        normalScale: new THREE.Vector2(0.2, 0.2), 
+        side: THREE.DoubleSide
     });
 
     const poolMesh = new THREE.Mesh(poolGeometry, waterMaterial);
-    poolMesh.castShadow = true;
-    poolMesh.receiveShadow = true;
+    // Shadow dimatikan
     group.add(poolMesh);
 
     const edgesGeometry = new THREE.EdgesGeometry(poolGeometry);
@@ -256,7 +259,7 @@ function createPool(width, length, tipOffset = 0) {
 }
 
 function createHotspot(position, title, description, scene) {
-    const geo = new THREE.SphereGeometry(1.5, 16, 16);
+    const geo = new THREE.SphereGeometry(1.5, 8, 8); // Kurangi segmen sphere hotspot
     const mat = new THREE.MeshBasicMaterial({ 
         color: 0xff0000, 
         transparent: true, 
@@ -300,12 +303,18 @@ function main() {
     const canvas = document.querySelector('#c');
     const view1Elem = document.querySelector('#view1');
     const view2Elem = document.querySelector('#view2');
-    const renderer = new THREE.WebGLRenderer({ antialias: true, canvas, alpha: true });
+    
+    // OPTIMISASI PERFORMA EKSTRIM:
+    // 1. Antialias OFF
+    // 2. Pixel Ratio dipaksa 1 (resolusi standar)
+    const renderer = new THREE.WebGLRenderer({ antialias: false, canvas, alpha: true });
+    renderer.setPixelRatio(1); 
 
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.0;
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // MATIKAN SHADOW MAP SECARA GLOBAL UNTUK PERFORMA
+    renderer.shadowMap.enabled = false; 
 
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0xddeeff, 0.002);
@@ -405,7 +414,6 @@ function main() {
 
             popup.style.left = `${posX}px`;
             popup.style.top = `${posY}px`;
-        } else {
         }
     }
 
@@ -413,30 +421,31 @@ function main() {
 
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.castShadow = true;
-    dirLight.shadow.bias = -0.0001;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
-    const d = 150;
-    dirLight.shadow.camera.left = -d;
-    dirLight.shadow.camera.right = d;
-    dirLight.shadow.camera.top = d;
-    dirLight.shadow.camera.bottom = -d;
+    // SHADOW DIMATIKAN
+    dirLight.castShadow = false; 
+    
+    dirLight.position.set(50, 100, 50);
     scene.add(dirLight);
     scene.add(dirLight.target);
 
-    const dirLightHelper = new THREE.DirectionalLightHelper(dirLight);
-    scene.add(dirLightHelper);
+    // Helper dimatikan biar bersih
+    // const dirLightHelper = new THREE.DirectionalLightHelper(dirLight);
+    // scene.add(dirLightHelper);
 
-    const ambLight = new THREE.AmbientLight(0xffffff, 0.3);
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.6); // Terangkan ambient karena shadow mati
     scene.add(ambLight);
 
-    const interiorLight = new THREE.PointLight(0xffaa00, 100, 100);
+    const interiorLight = new THREE.PointLight(0xffaa00, 50, 100);
     interiorLight.position.set(0, 5, 0);
     scene.add(interiorLight);
 
     const clock = new THREE.Clock();
+    
+    // SETUP LOADERS
     const gltfLoader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
+    gltfLoader.setDRACOLoader(dracoLoader);
 
     new RGBELoader()
         .load(TEXTURES.hdri, function (texture) {
@@ -511,14 +520,13 @@ function main() {
             dirLight.color.setHSL(0.6, 1, 0.3);
         }
         
-        ambLight.intensity = Math.max(0.1, daylight * 0.5);
+        ambLight.intensity = Math.max(0.4, daylight * 0.6); // Ambient lebih terang
         interiorLight.intensity = (1 - daylight) * 100;
         
         updateBackgroundBrightness(daylight);
 
         dirLight.target.updateMatrixWorld();
-        dirLightHelper.update();
-        dirLight.shadow.camera.updateProjectionMatrix();
+        // dirLightHelper.update();
     }
 
     let timeDisplay = document.getElementById('time-display');
@@ -558,28 +566,32 @@ function main() {
     landTexture.repeat.set(repeats, repeats);
 
     const planeGeo = new THREE.PlaneGeometry(SCENE_CONFIG.planeSize, SCENE_CONFIG.planeSize);
+    
+    // UBAH WARNA TANAH JADI PUTIH (0xffffff) UNTUK EFEK SALJU
     const planeMat = new THREE.MeshStandardMaterial({ 
         map: landTexture,
         roughness: 0.9,
         metalness: 0.0,
-        color: 0xaaaaaa
+        color: 0xffffff // Putih Salju
     });
     const planeMesh = new THREE.Mesh(planeGeo, planeMat);
     planeMesh.rotation.x = Math.PI * -0.5;
-    planeMesh.receiveShadow = true;
+    // Shadow receive dimatikan
     scene.add(planeMesh);
 
     const mainPyramid = createPyramid(PYRAMID_CONFIG);
     scene.add(mainPyramid);
 
+    // HOTSPOT PIRAMIDA BESAR
     createHotspot(
         new THREE.Vector3(0, 15, 0), 
-        "Louvre Pyramid",
-        PYRAMID_CONFIG.description,
+        "Piramida Besar (The Great Pyramid)",
+        "Pintu masuk utama Louvre yang ikonik. Selesai dibangun tahun 1989, tingginya mencapai 21 meter.",
         scene
     );
 
-    const snowCount = 15000;
+    // UBAH JUMLAH SALJU DI SINI (1500 Partikel)
+    const snowCount = 1500;
     const snowRange = 500;
     const snowSystem = createSnow(snowCount, snowRange);
     scene.add(snowSystem);
@@ -638,97 +650,138 @@ function main() {
     small1.position.set(-smallPyrDist, 0, -smallPyrDist + 45);
     scene.add(small1);
 
+    // HOTSPOT PIRAMIDA KECIL 1
+    createHotspot(
+        new THREE.Vector3(-smallPyrDist, 10, -smallPyrDist + 45), 
+        "Piramida Kecil 1",
+        "Salah satu dari tiga piramida kecil yang mengelilingi piramida utama, memberikan cahaya ke area bawah tanah.",
+        scene
+    );
+
     const small2 = createPyramid(smallConfig);
     small2.position.set(smallPyrDist - 45, 0, -smallPyrDist);
     scene.add(small2);
+
+    // HOTSPOT PIRAMIDA KECIL 2
+    createHotspot(
+        new THREE.Vector3(smallPyrDist - 45, 10, -smallPyrDist), 
+        "Piramida Kecil 2",
+        "Piramida kecil ini berfungsi sebagai ventilasi dan skylight untuk lobi Napoleon Hall di bawahnya.",
+        scene
+    );
 
     const small3 = createPyramid(smallConfig);
     small3.position.set(-smallPyrDist + 45, 0, smallPyrDist);
     scene.add(small3);
 
+    // HOTSPOT PIRAMIDA KECIL 3
+    createHotspot(
+        new THREE.Vector3(-smallPyrDist + 45, 10, smallPyrDist), 
+        "Piramida Kecil 3",
+        "Arsitek I.M. Pei merancang piramida-piramida ini untuk menciptakan kontras geometri modern dengan istana klasik.",
+        scene
+    );
+
     BUILDING_CONFIG.forEach(config => {
-    const repeatCount = config.repeat || 1;
-    const spacing = config.spacing || 0;
-    const scale = config.scale || { x: 1, y: 1, z: 1 };
+        const repeatCount = config.repeat || 1;
+        const spacing = config.spacing || 0;
+        const scale = config.scale || { x: 1, y: 1, z: 1 };
 
-    const getOffsetPosition = (basePos, index, total, space, rotation) => {
-        const offset = (index - (total - 1) / 2) * space;
-        const offsetVec = new THREE.Vector3(offset, 0, 0);
-        offsetVec.applyEuler(new THREE.Euler(rotation.x, rotation.y, rotation.z));
-        return new THREE.Vector3(
-            basePos.x + offsetVec.x,
-            basePos.y + offsetVec.y,
-            basePos.z + offsetVec.z
-        );
-    };
+        const getOffsetPosition = (basePos, index, total, space, rotation) => {
+            const offset = (index - (total - 1) / 2) * space;
+            const offsetVec = new THREE.Vector3(offset, 0, 0);
+            offsetVec.applyEuler(new THREE.Euler(rotation.x, rotation.y, rotation.z));
+            return new THREE.Vector3(
+                basePos.x + offsetVec.x,
+                basePos.y + offsetVec.y,
+                basePos.z + offsetVec.z
+            );
+        };
 
-    const centerIndex = (repeatCount - 1) / 2;
-    const centerPos = getOffsetPosition(config.position, centerIndex, repeatCount, spacing, config.rotation);
-    const hotspotPos = centerPos.clone();
-    hotspotPos.y += 35;
-    createHotspot(hotspotPos, config.name, config.description, scene);
+        const centerIndex = (repeatCount - 1) / 2;
+        const centerPos = getOffsetPosition(config.position, centerIndex, repeatCount, spacing, config.rotation);
+        const hotspotPos = centerPos.clone();
+        hotspotPos.y += 35;
+        createHotspot(hotspotPos, config.name, config.description, scene);
 
-    if (config.modelPath) {
-        gltfLoader.load(config.modelPath, (gltf) => {
-            const baseModel = gltf.scene;
-
+        // --- FUNGSI BARU: MEMBUAT KOTAK PENGGANTI (PLACEHOLDER) ---
+        const createPlaceholder = () => {
             for (let i = 0; i < repeatCount; i++) {
                 const finalPos = getOffsetPosition(config.position, i, repeatCount, spacing, config.rotation);
-                
-                const model = baseModel.clone();
-                model.position.copy(finalPos);
-                model.rotation.set(config.rotation.x, config.rotation.y, config.rotation.z);
-                model.scale.set(scale.x, scale.y, scale.z);
+                const geo = new THREE.BoxGeometry(
+                    config.placeholderSize.w,
+                    config.placeholderSize.h,
+                    config.placeholderSize.d
+                );
+                const mat = new THREE.MeshStandardMaterial({ color: 0x808080 }); // Kotak abu-abu
+                const mesh = new THREE.Mesh(geo, mat);
 
-                model.traverse((child) => {
-                    if (child.isMesh) {
-                        child.castShadow = true;
-                        child.receiveShadow = true;
+                mesh.position.set(
+                    finalPos.x,
+                    finalPos.y + (config.placeholderSize.h * scale.y / 2),
+                    finalPos.z
+                );
+                mesh.rotation.set(config.rotation.x, config.rotation.y, config.rotation.z);
+                mesh.scale.set(scale.x, scale.y, scale.z);
 
-                        // Fungsi helper untuk memaksa update sisi material
-                        const setDoubleSide = (mat) => {
-                            mat.side = THREE.DoubleSide;
-                            mat.needsUpdate = true; // FORCE UPDATE: Penting agar Three.js merender ulang material ini
-                        };
-
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach(setDoubleSide);
-                        } else if (child.material) {
-                            setDoubleSide(child.material);
-                        }
-                    }
-                });
-                scene.add(model);
+                // Shadow mati
+                scene.add(mesh);
             }
-        }, undefined, (error) => {
-            console.error('Error loading model:', error); 
-        });
+        };
 
-    } else {
-        for (let i = 0; i < repeatCount; i++) {
-            const finalPos = getOffsetPosition(config.position, i, repeatCount, spacing, config.rotation);
-            const geo = new THREE.BoxGeometry(
-                config.placeholderSize.w,
-                config.placeholderSize.h,
-                config.placeholderSize.d
-            );
-            const mat = new THREE.MeshStandardMaterial({ color: 0x808080 });
-            const mesh = new THREE.Mesh(geo, mat);
+        if (config.modelPath) {
+            gltfLoader.load(config.modelPath, (gltf) => {
+                const baseModel = gltf.scene;
+                // Sembunyikan pesan loading jika model berhasil diload
+                document.getElementById('loading').style.opacity = 0;
 
-            mesh.position.set(
-                finalPos.x,
-                finalPos.y + (config.placeholderSize.h * scale.y / 2),
-                finalPos.z
-            );
-            mesh.rotation.set(config.rotation.x, config.rotation.y, config.rotation.z);
-            mesh.scale.set(scale.x, scale.y, scale.z);
+                for (let i = 0; i < repeatCount; i++) {
+                    const finalPos = getOffsetPosition(config.position, i, repeatCount, spacing, config.rotation);
+                    
+                    const model = baseModel.clone();
+                    model.position.copy(finalPos);
+                    model.rotation.set(config.rotation.x, config.rotation.y, config.rotation.z);
+                    model.scale.set(scale.x, scale.y, scale.z);
 
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            scene.add(mesh);
+                    model.traverse((child) => {
+                        if (child.isMesh) {
+                            // SHADOW MATI UNTUK PERFORMA
+                            child.castShadow = false;
+                            child.receiveShadow = false; 
+
+                            // Fungsi helper untuk memaksa update sisi material
+                            const setDoubleSide = (mat) => {
+                                mat.side = THREE.DoubleSide;
+                                mat.needsUpdate = true; // FORCE UPDATE
+                            };
+
+                            if (Array.isArray(child.material)) {
+                                child.material.forEach(setDoubleSide);
+                            } else if (child.material) {
+                                setDoubleSide(child.material);
+                            }
+                        }
+                    });
+                    scene.add(model);
+                }
+            }, 
+            // onProgress callback
+            (xhr) => {
+                console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+            },
+            // onError callback
+            (error) => {
+                console.error('Error loading model:', error);
+                console.warn('Gagal memuat GLB, menggunakan placeholder.');
+                // Panggil fungsi placeholder saat error terjadi
+                createPlaceholder();
+            });
+
+        } else {
+            // Jika tidak ada modelPath, gunakan placeholder
+            createPlaceholder();
         }
-    }
-});
+    });
 
     updateLightingForTime(timeState.minutes);
     updateTimeDisplay();
@@ -797,7 +850,7 @@ function main() {
             camera.aspect = aspect;
             camera.updateProjectionMatrix();
             cameraHelper.visible = false;
-            dirLightHelper.visible = false;
+            // Helper shadow dimatikan
             renderer.render(scene, camera);
         }
 
@@ -806,7 +859,7 @@ function main() {
             camera2.aspect = aspect;
             camera2.updateProjectionMatrix();
             cameraHelper.visible = true;
-            dirLightHelper.visible = true;
+            // Helper shadow dimatikan
             renderer.render(scene, camera2);
         }
 
