@@ -85,21 +85,21 @@ function main() {
   const sandGeometry = new THREE.BufferGeometry();
   const sandPositions = new Float32Array(sandCount * 3);
   const sandSpeeds = new Float32Array(sandCount);
-  const sandBaseHeights = new Float32Array(sandCount); 
+  const sandBaseHeights = new Float32Array(sandCount);
 
   // Arah angin 
-  const windDir = new THREE.Vector2(1.0, 0.25); 
+  const windDir = new THREE.Vector2(1.0, 0.25);
   windDir.normalize();
 
   for (let i = 0; i < sandCount; i++) {
     const i3 = i * 3;
 
     sandPositions[i3 + 0] = (Math.random() - 0.5) * 450;   // x
-    sandBaseHeights[i] = Math.random() * 0.6 + 0.15;       
+    sandBaseHeights[i] = Math.random() * 0.6 + 0.15;
     sandPositions[i3 + 1] = sandBaseHeights[i];            // y
     sandPositions[i3 + 2] = (Math.random() - 0.5) * 450;   // z
 
-    sandSpeeds[i] = 0.05 + Math.random() * 0.08;           
+    sandSpeeds[i] = 0.05 + Math.random() * 0.08;
   }
 
   sandGeometry.setAttribute(
@@ -448,17 +448,19 @@ function main() {
         sphinx,
         0.4,
         `
-        <div style="width: 600px; max-width: 100%;">
-          <img src="textures/Sphinx.png"
-               alt="Great Sphinx of Giza"
-               style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
-          <h3 style="margin:0 0 6px; font-size:18px;">Great Sphinx of Giza</h3>
-          <p style="margin:0; font-size:14px; line-height:1.4;">
-            Limestone statue with a human head and lion body, believed to represent Pharaoh Khafre.
-          </p>
-        </div>
-        `
+  <div style="width: 600px; max-width: 100%;">
+    <img src="textures/Sphinx.png"
+         alt="Great Sphinx of Giza"
+         style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
+    <h3 style="margin:0 0 6px; font-size:18px;">Great Sphinx of Giza</h3>
+    <p style="margin:0; font-size:14px; line-height:1.4;">
+      Patung batu kapur berbentuk kepala manusia dan tubuh singa, yang diyakini
+      merepresentasikan Firaun Khafre sebagai penjaga kompleks piramida Giza.
+    </p>
+  </div>
+  `
       );
+
     }
   );
 
@@ -498,19 +500,21 @@ function main() {
             camel,
             0.8,
             `
-            <div style="width: 600px; max-width: 100%;">
-              <img src="textures/camel.png"
-                   alt="Desert Caravan Camels"
-                   style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
-              <h3 style="margin:0 0 6px; font-size:18px;">Desert Caravan Camels</h3>
-              <p style="margin:0; font-size:14px; line-height:1.4;">
-                Camels were not used for pyramid construction, but served as transport for
-                long-distance travel and trade across the desert in caravan groups.
-              </p>
-            </div>
-            `
+    <div style="width: 600px; max-width: 100%;">
+      <img src="textures/camel.png"
+           alt="Desert Caravan Camels"
+           style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
+      <h3 style="margin:0 0 6px; font-size:18px;">Unta Kafilah Gurun</h3>
+      <p style="margin:0; font-size:14px; line-height:1.4;">
+        Unta tidak digunakan untuk membangun piramida, namun berperan penting
+        sebagai hewan transportasi jarak jauh dan perdagangan melintasi gurun
+        dalam rombongan kafilah.
+      </p>
+    </div>
+    `
           );
         }
+
       });
     }
   );
@@ -623,49 +627,57 @@ function main() {
     pyramid1Mesh,
     1,
     `
-    <div style="width: 600px; max-width: 100%;">
-      <img src="textures/Khufu.png"
-           alt="Great Pyramid of Giza (Khufu)"
-           style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
-      <h3 style="margin:0 0 6px; font-size:18px;">Great Pyramid of Giza (Khufu)</h3>
-      <p style="margin:0; font-size:14px; line-height:1.4;">
-        Largest and oldest pyramid in the Giza complex, built as the tomb of Pharaoh Khufu.
-      </p>
-    </div>
-    `
+  <div style="width: 600px; max-width: 100%;">
+    <img src="textures/Khufu.png"
+         alt="Great Pyramid of Giza (Khufu)"
+         style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
+    <h3 style="margin:0 0 6px; font-size:18px;">Piramida Agung Giza (Khufu)</h3>
+    <p style="margin:0; font-size:14px; line-height:1.4;">
+      Piramida terbesar dan tertua di kompleks Giza, dibangun sebagai makam
+      untuk Firaun Khufu dan menjadi salah satu dari Tujuh Keajaiban Dunia Kuno.
+    </p>
+  </div>
+  `
   );
+
+
+
 
   createHotspotOnObject(
     pyramid2Mesh,
     1,
     `
-    <div style="width: 600px; max-width: 100%;">
-      <img src="textures/Khafre.png"
-           alt="Pyramid of Khafre"
-           style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
-      <h3 style="margin:0 0 6px; font-size:18px;">Pyramid of Khafre</h3>
-      <p style="margin:0; font-size:14px; line-height:1.4;">
-        Second-largest pyramid at Giza, associated with Pharaoh Khafre and the nearby Great Sphinx.
-      </p>
-    </div>
-    `
+  <div style="width: 600px; max-width: 100%;">
+    <img src="textures/Khafre.png"
+         alt="Pyramid of Khafre"
+         style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
+    <h3 style="margin:0 0 6px; font-size:18px;">Piramida Khafre</h3>
+    <p style="margin:0; font-size:14px; line-height:1.4;">
+      Piramida terbesar kedua di Giza yang dikaitkan dengan Firaun Khafre
+      dan berada satu kompleks dengan patung Great Sphinx sebagai penjaganya.
+    </p>
+  </div>
+  `
   );
+
 
   createHotspotOnObject(
     pyramid3Mesh,
     1,
     `
-    <div style="width: 600px; max-width: 100%;">
-      <img src="textures/Menkaure.png"
-           alt="Pyramid of Menkaure"
-           style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
-      <h3 style="margin:0 0 6px; font-size:18px;">Pyramid of Menkaure</h3>
-      <p style="margin:0; font-size:14px; line-height:1.4;">
-        The smallest of the three main Giza pyramids, dedicated to Pharaoh Menkaure.
-      </p>
-    </div>
-    `
+  <div style="width: 600px; max-width: 100%;">
+    <img src="textures/Menkaure.png"
+         alt="Pyramid of Menkaure"
+         style="width:100%; border-radius:10px; margin-bottom:10px; object-fit:cover;">
+    <h3 style="margin:0 0 6px; font-size:18px;">Piramida Menkaure</h3>
+    <p style="margin:0; font-size:14px; line-height:1.4;">
+      Piramida terkecil dari tiga piramida utama di Giza, dibangun untuk
+      Firaun Menkaure dan dikelilingi oleh beberapa piramida pendamping yang lebih kecil.
+    </p>
+  </div>
+  `
   );
+
 
   function onClick(event) {
     let clickedCamera = camera;
